@@ -5,10 +5,8 @@ module Golem
   Error = Class.new(StandardError)
   IncompletePacket = Class.new(Error)
 
-  require "golem/field"
-  require "golem/packet_definition"
-  require "golem/packet"
-  require "golem/packets"
-  require "golem/client"
+  %w(field packet_definition packet packets client interceptor proxy).each do |lib|
+    require "golem/#{lib}"
+  end
 
 end

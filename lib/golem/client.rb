@@ -40,7 +40,7 @@ module Golem
           packet, @buffer = Packet.parse(buffer)
           packets << packet
         rescue IncompletePacket
-          puts "incomplete packet"
+          puts "incomplete"
           break
         end
       end
