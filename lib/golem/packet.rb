@@ -12,10 +12,10 @@ module Golem
           debug data
           raise Error, "unknown packet with code #{'0x%02x' % code}"
         end
-        puts "#{'0x%0x' % code}: #{packet_class.kind}"
+        # puts "#{'0x%0x' % code}: #{packet_class.kind}"
+        # debug data
         packet = packet_class.new
         remainder = packet.parse(data)
-        raise IncompletePacket unless remainder && packet.values.all? {|v| v}
         [packet, remainder]
       end
 
@@ -95,8 +95,8 @@ module Golem
     def parse(data)
       @values = []
       self.class.fields.each do |field|
-        value, data = field.new.parse(data)
-        @values << value
+        *parsed_values, data = field.new.parse(data)
+        @values.concat parsed_values
       end
       data
     end
@@ -107,6 +107,10 @@ module Golem
         data << self.class.fields[i].new(value).encode
       end
       data
+    end
+
+    def inspect
+      "<packet #{'0x%02x' % self.class.code}: #{self.class.kind} #{values.inspect}>"
     end
 
   end

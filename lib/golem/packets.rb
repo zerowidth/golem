@@ -1,20 +1,20 @@
 module Golem
   module Packets
 
-    def self.client_packet(kind, code, description, &blk)
+    def self.client_packet(kind, code, description="", &blk)
       p = Class.new(Packet)
       p.kind = kind
       p.code = code
-      p.description = description
+      # p.description = description
       p.module_eval(&blk) if blk
       Packet.by_kind[kind] = p
     end
 
-    def self.server_packet(kind, code, description, &blk)
+    def self.server_packet(kind, code, description="", &blk)
       p = Class.new(Packet)
       p.kind = kind
       p.code = code
-      p.description = description
+      # p.description = description
       p.module_eval(&blk) if blk
       Packet.by_code[code] = p
     end
@@ -90,6 +90,48 @@ module Golem
       bool :flying
     end
 
+    client_packet :block_dig, 0x0e do
+      byte :status
+      int :x
+      byte :y
+      int :z
+      byte :direction
+    end
+
+    client_packet :place, 0x0f do
+      short :type
+      int :x
+      byte :y
+      int :z
+      byte :direction
+    end
+
+    server_packet :block_item_switch, 0x10 do
+      int :entity_id
+      short :item_code
+    end
+
+    client_packet :block_item_switch, 0x10 do
+      int :entity_id
+      short :item_code
+    end
+
+    server_packet :add_to_inventory, 0x11 do
+      short :type
+      byte :amount
+      short :life
+    end
+
+    client_packet :arm_animation, 0x12 do
+      int :entity_id
+      bool :forward # on to other clients
+    end
+
+    server_packet :arm_animation, 0x12 do
+      int :entity_id
+      bool :forward # on to other clients
+    end
+
     server_packet :named_entity_spawn, 0x14, "named entity spawn" do
       int :id
       string :name
@@ -111,6 +153,19 @@ module Golem
       byte :rotation
       byte :pitch
       byte :roll
+    end
+
+    server_packet :collect_item, 0x16 do
+      int :item_id
+      int :collector_id
+    end
+
+    server_packet :vehicle_spawn, 0x17 do
+      int :id
+      byte :type
+      int :x
+      int :y
+      int :z
     end
 
     server_packet :mob_spawn, 0x18, "mob/entity spawn" do
@@ -157,6 +212,28 @@ module Golem
       int :x
       int :z
       bool :mode
+    end
+
+    server_packet :map_chunk, 0x33, "map chunk data" do
+      int :x
+      short :y
+      int :z
+      fields << Field::MapChunk
+    end
+
+    server_packet :block_change, 0x35, "block change" do
+      int :x
+      byte :y
+      int :z
+      byte :type
+      byte :metadata
+    end
+
+    server_packet :complex_entity, 0x3b, "complex entity" do
+      int :x
+      short :y
+      int :z
+      fields << Field::EntityPayload
     end
 
     server_packet :disconnect, 0xff, "server disconnect" do

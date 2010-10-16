@@ -27,9 +27,10 @@ module Golem
 
     class String < Base
       def parse(data)
-        size, rest = consume data, "n"
-        value, rest = consume rest, "a#{size}"
-        [value, rest]
+        size, data = consume data, "n"
+        *bytes, data = consume data, "C#{size}"
+        value = bytes.map { |b| b.chr }.join("")
+        [value, data]
       end
 
       def encode
@@ -39,9 +40,9 @@ module Golem
 
     class Integer < Base
       def parse(data)
-        # N isn't correct, need big-endian signed 32-bit integer
-        value, rest = consume data, "N"
-        [value, rest]
+        value, data = consume data, "N"
+        value = value & 0x40000000 > 0 ? -((value ^ 0xFFFFFFFF) & 0x7FFFFFFF) - 1 : value
+        [value, data]
       end
 
       def encode
@@ -114,7 +115,7 @@ module Golem
 
     class PlayerInventory < Base
       def parse(data)
-        type, supposed_count, rest = consume data, "Nn"
+        type, supposed_count, data = consume data, "Nn"
         count = case type
         when 0xFFFFFFFF # -1
           36
@@ -123,18 +124,43 @@ module Golem
         end
 
         count.times do |n|
-          item_id, rest = consume rest, "n"
+          item_id, data = consume data, "n"
           # item_id = item_id & 0x4000 > 0 ? -((item_id ^ 0xFFFF) & 0x7FFF) - 1 : item_id
-
-          puts "    slot #{n} item id #{item_id}"
-
+          # puts "    slot #{n} item id #{item_id}"
           unless item_id == 0xFFFF
-            item_count, item_health, rest = consume rest, "cn"
+            item_count, item_health, data = consume data, "cn"
           end
         end
 
-        puts "done with inventory"
-        [supposed_count, rest]
+        # puts "done with inventory"
+        [supposed_count, data]
+      end
+    end
+
+    class MapChunk < Base
+      def parse(data)
+        size_x, size_y, size_z, chunk_size, data = consume data, "cccN"
+        # total_entries = (size_x + 1) * (size_y + 1) * (size_z + 1)
+        if data.size >= chunk_size
+          chunk_data = data[0...chunk_size]
+          data = data[chunk_size..-1]
+        else
+          raise IncompletePacket
+        end
+        # chunk_data, data = consume data, "C#{chunk_size}"
+        # *bytes, data = consume data, "C#{(total_entries * 2.5).to_i}"
+        # chunk = bytes.map {|b| b.chr }.join("")
+        # [[size_x + 1, size_y + 1, size_z + 1, chunk_size], data]
+        [size_x + 1, size_y + 1, size_z + 1, "#{chunk_size} bytes", data]
+      end
+    end
+
+    class EntityPayload < Base
+      def parse(data)
+        size, data = consume data, "n"
+        *bytes, data = consume data, "C#{size}"
+        payload = bytes.map {|b| b.chr }.join("")
+        [[size, payload], data]
       end
     end
 
