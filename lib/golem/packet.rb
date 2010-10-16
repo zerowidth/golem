@@ -31,6 +31,22 @@ module Golem
         client_packets_by_kind[p.kind] = p
       end
 
+      def server_packets_by_code
+        @server_packets_by_code ||= {}
+      end
+
+      def client_packets_by_code
+        @client_packets_by_code ||= {}
+      end
+
+      def server_packets_by_kind
+        @server_packets_by_kind ||= {}
+      end
+
+      def client_packets_by_kind
+        @client_packets_by_kind ||= {}
+      end
+
       attr_accessor :code
       attr_accessor :kind
 
@@ -55,22 +71,6 @@ module Golem
           column += 1
         end
         puts
-      end
-
-      def server_packets_by_code
-        @server_packets_by_code ||= {}
-      end
-
-      def client_packets_by_code
-        @client_packets_by_code ||= {}
-      end
-
-      def server_packets_by_kind
-        @server_packets_by_kind ||= {}
-      end
-
-      def client_packets_by_kind
-        @client_packets_by_kind ||= {}
       end
 
       def field(name, type)

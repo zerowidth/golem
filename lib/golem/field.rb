@@ -65,8 +65,9 @@ module Golem
 
     class Short < Base
       def parse(data)
-        # n is wrong, it's unsigned... convert to signed
-        value, remainder = data.unpack("na*")
+        value, data = consume data, "n"
+        value = value & 0x4000 > 0 ? -((value ^ 0xFFFF) & 0x7FFF) - 1 : value
+        [value, data]
       end
 
       def encode

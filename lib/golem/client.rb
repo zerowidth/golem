@@ -7,55 +7,33 @@ module Golem
       end
     end
 
-    attr_reader :buffer
+    attr_reader :parser
 
     def send_packet(kind, *values)
-      packet_class = Packet.by_kind[kind] or raise ArgumentError, "unknown packet type #{kind.inspect}"
-      puts "sending packet #{kind}"
+      packet_class = Packet.client_packets_by_kind[kind] or raise ArgumentError, "unknown packet type #{kind.inspect}"
       packet = packet_class.new(*values)
+      puts "<-- #{packet.inspect}"
       send_data packet.encode
     end
 
-    def send_data(data)
-      puts "<-- #{data.inspect}"
-      super
-    end
-
     def post_init
-      @buffer = ""
+      @parser = Parser.new
       send_packet :handshake, "golem"
     end
 
     def receive_data(data)
-      puts "--> " + data.inspect
-      buffer << data
-      packets = parse
-      packets.each { |packet| respond(packet) }
-    end
-
-    def parse
-      packets = []
-      while buffer != ""
-        begin
-          packet, @buffer = Packet.parse(buffer)
-          packets << packet
-        rescue IncompletePacket
-          puts "incomplete"
-          break
-        end
+      parser.parse(data).each do |packet|
+        puts "--> #{packet.inspect}"
+        respond(packet)
       end
-      packets
     end
 
     def respond(packet)
       case packet.class.kind
       when :server_handshake
-        puts "server says hello. server id is #{packet.values[0]}"
         send_packet :login, 2, "golem", "password"
-      when :accept_login
-        # ?
       when :pre_chunk
-        send_packet :flying_ack, 1
+        # send_packet :flying_ack, 1
       when :disconnect
         close_connection
         EventMachine.stop_event_loop
