@@ -5,19 +5,41 @@ module Golem
 
     class << self
 
-      def parse(data)
+      def parse(data, server_packet=true)
         code, data = data.unpack("Ca*")
-        packet_class = by_code[code]
+        packet_class = server_packet ? server_packets_by_code[code] : client_packets_by_code[code]
+
         unless packet_class
           debug data
-          raise Error, "unknown packet with code #{'0x%02x' % code}"
+          raise Error, "unknown #{server_packet ? "server" : "client"} packet with code #{'0x%02x' % code}"
         end
+
         # puts "#{'0x%0x' % code}: #{packet_class.kind}"
-        # debug data
+
         packet = packet_class.new
         remainder = packet.parse(data)
         [packet, remainder]
       end
+
+      def server_packet(p)
+        server_packets_by_code[p.code] = p
+        server_packets_by_kind[p.kind] = p
+      end
+
+      def client_packet(p)
+        client_packets_by_code[p.code] = p
+        client_packets_by_kind[p.kind] = p
+      end
+
+      attr_accessor :code
+      attr_accessor :kind
+
+      # fields defined for subclasses
+      def fields
+        @fields ||= []
+      end
+
+      protected
 
       def debug(data)
         print "-" * 52
@@ -35,55 +57,57 @@ module Golem
         puts
       end
 
-      # for code-based server packets
-      def by_code
-        @by_code ||= {}
+      def server_packets_by_code
+        @server_packets_by_code ||= {}
       end
 
-      # for named client packets
-      def by_kind
-        @by_kind ||= {}
+      def client_packets_by_code
+        @client_packets_by_code ||= {}
       end
 
-      def fields
-        @fields ||= []
+      def server_packets_by_kind
+        @server_packets_by_kind ||= {}
+      end
+
+      def client_packets_by_kind
+        @client_packets_by_kind ||= {}
+      end
+
+      def field(name, type)
+        fields << type # [name, type]
       end
 
       def string(name)
-        fields << Field::String
+        field name, Field::String
       end
 
       def int(name)
-        fields << Field::Integer
+        field name, Field::Integer
       end
 
       def long(name)
-        fields << Field::Long
+        field name, Field::Long
       end
 
       def short(name)
-        fields << Field::Short
+        field name, Field::Short
       end
 
       def bool(name)
-        fields << Field::Boolean
+        field name, Field::Boolean
       end
 
       def double(name)
-        fields << Field::Double
+        field name, Field::Double
       end
 
       def float(name)
-        fields << Field::Float
+        field name, Field::Float
       end
 
       def byte(name)
-        fields << Field::Byte
+        field name, Field::Byte
       end
-
-      attr_accessor :code
-      attr_accessor :description
-      attr_accessor :kind
     end
 
     attr_reader :values
@@ -95,8 +119,8 @@ module Golem
     def parse(data)
       @values = []
       self.class.fields.each do |field|
-        *parsed_values, data = field.new.parse(data)
-        @values.concat parsed_values
+        *values, data = field.new.parse(data)
+        @values.concat values
       end
       data
     end
@@ -110,12 +134,8 @@ module Golem
     end
 
     def inspect
-      "<packet #{'0x%02x' % self.class.code}: #{self.class.kind} #{values.inspect}>"
+      "<#{'0x%02x' % self.class.code}: #{self.class.kind} #{values.inspect}>"
     end
 
   end
-
-  UnknownPacket = Class.new(Packet)
-  UnknownPacket.kind = :unknown
-  UnknownPacket.description = "unknown packet"
 end
