@@ -109,8 +109,9 @@ module Golem
 
     server_packet :player_move_look, 0x0d do
       double :x
-      double :y
+      # yes, this is reversed from the packet the client sends.
       double :stance
+      double :y
       double :z
       float :rotation
       float :pitch
@@ -239,11 +240,20 @@ module Golem
       byte :pitch
     end
 
-    server_packet :relative_entity_move_look, 0x21 do
+    server_packet :entity_move_look, 0x21 do
       int :id
       byte :x
       byte :y
       byte :z
+      byte :rotation
+      byte :pitch
+    end
+
+    server_packet :entity_teleport, 0x22 do
+      int :id
+      int :x
+      int :y
+      int :z
       byte :rotation
       byte :pitch
     end
@@ -259,6 +269,12 @@ module Golem
       short :y
       int :z
       field :chunk, Field::MapChunk
+    end
+
+    server_packet :multi_block_change, 0x34 do
+      int :x
+      int :z
+      field :block_changes, Field::MultiBlockChange
     end
 
     server_packet :block_change, 0x35 do

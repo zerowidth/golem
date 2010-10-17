@@ -165,5 +165,15 @@ module Golem
       end
     end
 
+    class MultiBlockChange < Base
+      def parse(data)
+        array_size, data = consume data, "n"
+        *coords, data = consume data, "n#{array_size}"
+        *types, data = consume data, "c#{array_size}"
+        *metadata, data = consume data, "c#{array_size}"
+        [coords, types, metadata, data]
+      end
+    end
+
   end
 end

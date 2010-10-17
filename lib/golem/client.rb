@@ -1,46 +1,59 @@
 module Golem
   class Client < ::EventMachine::Connection
 
-    def self.run(host)
+    def self.run(host, port = 25565)
       EventMachine.run do
-        EventMachine.connect host, 25565, self
+        EventMachine.connect host, port, self
       end
     end
 
-    attr_reader :parser
+    attr_reader :parser, :state
 
-    def send_packet(kind, *values)
-      packet_class = Packet.client_packets_by_kind[kind] or raise ArgumentError, "unknown packet type #{kind.inspect}"
-      packet = packet_class.new(*values)
-      puts "<-- #{packet.inspect}"
-      send_data packet.encode
+    def send_packet(packet)
+      if packet == :disconnect
+        close_connection
+        EventMachine.stop_event_loop
+        log "disconnecting"
+      else
+        log "<-- #{packet.inspect}"
+        send_data packet.encode
+      end
     end
 
     def post_init
       @parser = Parser.new
-      send_packet :handshake, "golem"
+      @state = State.new
+      send_response_data
+    rescue => e
+      puts e.inspect
+      puts e.backtrace
+      raise
     end
 
     def receive_data(data)
       parser.parse(data).each do |packet|
-        puts "--> #{packet.inspect}"
-        respond(packet)
+        log "--> #{packet.inspect}"
+        state.update(packet)
+      end
+      send_response_data
+    rescue => e
+      puts e.inspect
+      puts e.backtrace
+      raise
+    end
+
+    def send_response_data
+      state.respond do |packet|
+        if Symbol === :packet || packet.wait == 0
+          send_packet packet
+        else
+          EM.add_timer(packet.wait) { send_packet packet }
+        end
       end
     end
 
-    def respond(packet)
-      case packet.class.kind
-      when :server_handshake
-        send_packet :login, 2, "golem", "password"
-      when :pre_chunk
-        # send_packet :flying_ack, 1
-      when :disconnect
-        close_connection
-        EventMachine.stop_event_loop
-      else
-        # puts "unknown packet, sending keepalive"
-        # send_packet :keepalive
-      end
+    def log(msg)
+      puts Time.now.strftime("%F %H:%M:%S.%3N ") << msg
     end
 
   end

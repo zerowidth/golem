@@ -74,7 +74,9 @@ module Golem
       end
 
       def field(name, type)
-        fields << type # [name, type]
+        fields << type
+        index = fields.size - 1
+        define_method(name) { values[index] }
       end
 
       def string(name)
@@ -114,6 +116,11 @@ module Golem
 
     def initialize(*values)
       @values = values
+    end
+
+    attr_writer :wait
+    def wait
+      @wait ||= 0
     end
 
     def parse(data)
