@@ -148,11 +148,7 @@ module Golem
         else
           raise IncompletePacket
         end
-        # chunk_data, data = consume data, "C#{chunk_size}"
-        # *bytes, data = consume data, "C#{(total_entries * 2.5).to_i}"
-        # chunk = bytes.map {|b| b.chr }.join("")
-        # [[size_x + 1, size_y + 1, size_z + 1, chunk_size], data]
-        [size_x + 1, size_y + 1, size_z + 1, "#{chunk_size} bytes", data]
+        [size_x + 1, size_y + 1, size_z + 1, chunk_data, data]
       end
     end
 

@@ -259,8 +259,8 @@ module Golem
     end
 
     server_packet :pre_chunk, 0x32 do
-      int :x
-      int :z
+      int :x # multiply by 16
+      int :z # multiply by 16
       bool :mode
     end
 

@@ -61,6 +61,14 @@ module Golem
       when :destroy_entity
         @entities.delete packet.id
 
+      when :pre_chunk
+        require "yaml"
+        File.open("pre_chunks.yml", "a") { |f| f.puts YAML.dump(packet) }
+      when :map_chunk
+        require "yaml"
+        File.open("map_chunks.yml", "a") { |f| f.puts YAML.dump(packet) }
+        send_packet :flying_ack, 1
+
       when :disconnect
         packets_to_send << :disconnect
       end
