@@ -24,7 +24,7 @@ module Golem
         EM.stop
         return
 
-      when "move"
+      when "m", "move"
         x, y, z = args.split(" ").map(&:to_i)
 
         unless x && y && z

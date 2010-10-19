@@ -4,6 +4,8 @@ module Golem
 
   class State
 
+    STANCE = 1.62000000476837
+
     attr_reader :entities, :position, :master
 
     def initialize
@@ -91,6 +93,7 @@ module Golem
     def move(x, y, z)
       position.x = x
       position.y = y
+      position.stance = y + STANCE
       position.z = z
       look_at_master
       send_move_look
