@@ -28,5 +28,50 @@ module Golem
     def drop(x, z)
       @chunks[x/16] && @chunks[x/16].delete(z/16)
     end
+
+    def available(x, y, z)
+      Location.new(self).available(x, y, z)
+    end
+  end
+
+  class Location
+    NORTH = [-1, 0, 0]
+    EAST  = [0, 0, -1]
+    SOUTH = [1, 0, 0]
+    WEST  = [0, 0, 1]
+    UP    = [0, 1, 0]
+
+    attr_reader :map
+
+    def initialize(map)
+      @map = map
+    end
+
+    def available(x, y, z)
+      pos = [x, y, z]
+      list = []
+      standing_on = map[x, y, z]
+
+      # look in ordinal directions:
+      [NORTH, EAST, SOUTH, WEST].map do |transform|
+        test = combine(pos, transform)
+        if pass?(*test) && pass?(*(combine(test, UP)))
+          list << test
+        end
+      end
+
+      list
+    end
+
+    def pass?(x, y, z)
+      block = map[x, y, z]
+      # don't pathfind into the unknown!
+      !block.nil? && !SOLID.include?(map[x, y, z])
+    end
+
+    def combine(start, delta)
+      start.zip(delta).map { |operands| operands.inject(0) { |m, v| m + v } }
+    end
+
   end
 end

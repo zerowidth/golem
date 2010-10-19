@@ -19,7 +19,7 @@ module Golem
       command, args = data.strip.split(/\s+/, 2)
       case command
       when "p", "pos", "position"
-        puts "golem position: #{client.position.inspect}"
+        puts "position: #{client.position.inspect}"
       when "q", "quit", "exit"
         EM.stop
         return
@@ -43,6 +43,11 @@ module Golem
         end
 
         puts "block at #{[x, y, z].inspect}: #{client.block_at(x, y, z).inspect}"
+
+      when "a", "adjacent"
+        p = client.position
+        puts "position: #{[p.x.floor, p.y, p.z.floor].inspect}"
+        client.adjacent.each {|a| puts "  - #{a.inspect}" }
 
       when "d", "debug"
         if !args || args.strip.empty?

@@ -103,6 +103,10 @@ module Golem
       map[x, y, z]
     end
 
+    def adjacent
+      map.available(position.x.floor, position.y.floor, position.z.floor)
+    end
+
     protected
 
     def send_look

@@ -82,5 +82,9 @@ module Golem
       state.block_at(x, y, z)
     end
 
+    def adjacent
+      state.adjacent
+    end
+
   end
 end
