@@ -18,6 +18,7 @@ module Golem
 
     def post_init
       @parser = Parser.new
+      puts "client connected"
       send_response_data
     rescue => e
       puts e.inspect
@@ -71,6 +72,14 @@ module Golem
 
     def position
       state.position
+    end
+
+    def move_to(x, y, z)
+      state.move(x, y, z)
+    end
+
+    def block_at(x, y, z)
+      state.block_at(x, y, z)
     end
 
   end

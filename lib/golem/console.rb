@@ -23,6 +23,27 @@ module Golem
       when "q", "quit", "exit"
         EM.stop
         return
+
+      when "move"
+        x, y, z = args.split(" ").map(&:to_i)
+
+        unless x && y && z
+          puts "usage: move <x> <y> <z> (integers)"
+          return
+        end
+
+        # move to center of block
+        client.move_to x + 0.5, y, z + 0.5
+
+      when "b", "block"
+        x, y, z = args.split(" ").map(&:to_i)
+        unless x && y && z
+          puts "usage: move <x> <y> <z> (integers)"
+          return
+        end
+
+        puts "block at #{[x, y, z].inspect}: #{client.block_at(x, y, z).inspect}"
+
       when "d", "debug"
         if !args || args.strip.empty?
           puts "usage: debug off|all|server|client|<regex>"

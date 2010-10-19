@@ -52,7 +52,10 @@ module Golem
         if entities[packet.id]
           deltas = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
           entities[packet.id] = entities[packet.id].map.with_index { |v, i| v + deltas[i] }
-          look_at_master if @master == packet.id
+          if @master == packet.id
+            look_at_master
+            send_look
+          end
         end
 
       when :entity_teleport
@@ -82,7 +85,27 @@ module Golem
 
     end
 
+    def move(x, y, z)
+      position.x = x
+      position.y = y
+      position.z = z
+      look_at_master
+      send_move_look
+    end
+
+    def block_at(x, y, z)
+      map[x, y, z]
+    end
+
     protected
+
+    def send_look
+      send_packet :player_look, position.rotation, position.pitch, position.flying
+    end
+
+    def send_move_look
+      send_packet :player_move_look, position.x, position.y, position.stance, position.z, position.rotation, position.pitch, position.flying
+    end
 
     def map
       @map ||= Map.new
