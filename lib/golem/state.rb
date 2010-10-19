@@ -11,6 +11,9 @@ module Golem
       @entities = {}
       @master = nil
       send_delayed 0.5, :handshake, "golem"
+
+      # keepalive
+      EM.add_periodic_timer(5) { send_packet :flying_ack, @position.flying }
     end
 
     def respond
@@ -115,7 +118,6 @@ module Golem
       x, y, z = entities[@master]
       position.pitch = Math.atan2(position.y - y, Math.sqrt((position.x - x)**2 + (position.z - z)**2)).in_degrees
       position.rotation = Math.atan2(position.z - z, position.x - x).in_degrees + 90
-      send_packet :player_look, position.rotation, position.pitch, position.flying
     end
 
     def send_packet(kind, *values)
