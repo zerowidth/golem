@@ -116,6 +116,7 @@ module Golem
 
     def look_at_master
       x, y, z = entities[@master]
+      return unless x && y && z
       position.pitch = Math.atan2(position.y - y, Math.sqrt((position.x - x)**2 + (position.z - z)**2)).in_degrees
       position.rotation = Math.atan2(position.z - z, position.x - x).in_degrees + 90
     end
