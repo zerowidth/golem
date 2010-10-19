@@ -1,28 +1,23 @@
 module Golem
   class Client < ::EventMachine::Connection
 
-    def self.run(host, port = 25565)
-      EventMachine.run do
-        EventMachine.connect host, port, self
-      end
-    end
-
     attr_reader :parser, :state
+
+    def initialize
+      @state = State.new
+    end
 
     def send_packet(packet)
       if packet == :disconnect
         close_connection
-        EventMachine.stop_event_loop
-        log "disconnecting"
       else
-        log "<-- #{packet.inspect}"
+        debug "<-- client  #{packet.inspect}"
         send_data packet.encode
       end
     end
 
     def post_init
       @parser = Parser.new
-      @state = State.new
       send_response_data
     rescue => e
       puts e.inspect
@@ -30,9 +25,14 @@ module Golem
       raise
     end
 
+    def unbind
+      puts "client disconnected"
+      EM.stop
+    end
+
     def receive_data(data)
       parser.parse(data).each do |packet|
-        log "--> #{packet.inspect}"
+        debug "server --> #{packet.inspect}"
         state.update(packet)
       end
       send_response_data
@@ -52,8 +52,25 @@ module Golem
       end
     end
 
+    attr_reader :debug_pattern
+    def debug_pattern=(pattern)
+      @debug_pattern = pattern ? Regexp.new(pattern) : nil
+    rescue RegexpError => e
+      log "invalid regex: #{e.message}: #{pattern.inspect}"
+    end
+
+    def debug(msg)
+      log msg if debug_pattern && msg =~ debug_pattern
+    end
+
     def log(msg)
       puts Time.now.strftime("%F %H:%M:%S.%3N ") << msg
+    end
+
+    # delegators
+
+    def position
+      state.position
     end
 
   end

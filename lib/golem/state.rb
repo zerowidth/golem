@@ -4,10 +4,12 @@ module Golem
 
   class State
 
+    attr_reader :entities, :position, :master
+
     def initialize
       @position = Position.new
       @entities = {}
-      @tracking = nil
+      @master = nil
       send_delayed 0.5, :handshake, "golem"
     end
 
@@ -19,74 +21,78 @@ module Golem
 
     def update(packet)
       case packet.class.kind
+
       when :server_handshake
         send_packet :login, 2, "golem", "password"
 
-      # position updates
+      when :disconnect
+        packets_to_send << :disconnect
+
       when :player_move_look
         x, stance, y, z, rotation, pitch, flying = packet.values
 
-        @position.x, @position.y, @position.z = x, y, z
-        @position.stance = stance
-        @position.rotation, @position.pitch, @position.flying = rotation, pitch, flying
+        position.x, position.y, position.z = x, y, z
+        position.stance = stance
+        position.rotation, position.pitch, position.flying = rotation, pitch, flying
 
-        # verify our position
+        # verify our position with the server
         send_packet :player_move_look, x, y, stance, z, rotation, pitch, flying
 
       when :entity
         # don't care
 
       when :vehicle_spawn, :mob_spawn
-        @entities[packet.id] = [packet.x, packet.y, packet.z]
+        entities[packet.id] = [packet.x, packet.y, packet.z]
 
       when :named_entity_spawn
-        @entities[packet.id] = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
-        @tracking ||= packet.id
+        entities[packet.id] = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
+        @master ||= packet.id
 
       when :entity_move, :entity_move_look
-        if @entities[packet.id]
+        if entities[packet.id]
           deltas = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
-          @entities[packet.id] = @entities[packet.id].map.with_index { |v, i| v + deltas[i] }
-          if @tracking == packet.id
-            # puts "tracking: #{deltas.inspect} #{@entities[@tracking].inspect}"
-            update_tracking
-          end
+          entities[packet.id] = entities[packet.id].map.with_index { |v, i| v + deltas[i] }
+          look_at_master if @master == packet.id
         end
 
       when :entity_teleport
-        if @entities[packet.id]
-          @entities[packet.id] = [packet.x, packet.y, packet.z].map { |v| v / 32 }
+        if entities[packet.id]
+          entities[packet.id] = [packet.x, packet.y, packet.z].map { |v| v / 32 }
         end
 
       when :destroy_entity
-        @entities.delete packet.id
+        entities.delete packet.id
 
       when :pre_chunk
-        require "yaml"
-        File.open("pre_chunks.yml", "a") { |f| f.puts YAML.dump(packet) }
-      when :map_chunk
-        require "yaml"
-        File.open("map_chunks.yml", "a") { |f| f.puts YAML.dump(packet) }
-        send_packet :flying_ack, 1
+        if !packet.add
+          map.delete(packet.x, packet.z)
+        end
 
-      when :disconnect
-        packets_to_send << :disconnect
+      when :map_chunk
+        send_packet :flying_ack, true
+        map.add Chunk.new(packet.x, packet.z, packet.values.last)
+
+      when :block_change
+        # TODO update map
+
+      when :multi_block_change
+        # TODO update map
+
       end
+
     end
 
     protected
 
-    def update_tracking
-      x, y, z = @entities[@tracking]
-      @position.x = x + 2
-      @position.y = y
-      @position.stance = y + 1.6
-      @position.z = z + 1
-      send_position
+    def map
+      @map ||= Map.new
     end
 
-    def send_position
-      send_packet :player_position, @position.x, @position.y, @position.stance, @position.z, @position.flying
+    def look_at_master
+      x, y, z = entities[@master]
+      position.pitch = Math.atan2(position.y - y, Math.sqrt((position.x - x)**2 + (position.z - z)**2)).in_degrees
+      position.rotation = Math.atan2(position.z - z, position.x - x).in_degrees + 90
+      send_packet :player_look, position.rotation, position.pitch, position.flying
     end
 
     def send_packet(kind, *values)

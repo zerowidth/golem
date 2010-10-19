@@ -2,6 +2,7 @@ module Golem
   module Field
     class Base
       attr_reader :value
+
       def initialize(value=nil)
         @value = value
       end
@@ -78,9 +79,12 @@ module Golem
     class Boolean < Base
       def parse(data)
         flag, remainder = consume data, "C"
+        flag = flag == 1
+        [flag, remainder]
       end
 
       def encode
+        value = value.kind_of?(Integer) ? value : (value ? 1 : 0)
         [value].pack("C")
       end
     end
