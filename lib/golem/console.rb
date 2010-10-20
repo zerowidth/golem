@@ -50,6 +50,37 @@ module Golem
 
         puts "block at #{[x, y, z].inspect}: #{client.block_at(x, y, z).inspect}"
 
+      when "p", "path"
+        x, y, z = args.split(" ").map(&:to_i)
+        unless x && y && z
+          puts "usage: move <x> <y> <z> (integers)"
+          return
+        end
+        p = client.position
+
+        puts "path from #{[p.x.floor, p.y, p.z.floor].map(&:to_i).inspect} to #{[x, y, z].inspect}:"
+        if path = client.path_to(x, y, z)
+          puts "path:"
+          path.each {|p| puts "  #{p.inspect}" }
+        else
+          puts "no path found"
+        end
+
+      when "come"
+        p = client.position
+        m = client.master_position
+        x, y, z = m[0].to_i, m[1].to_i, m[2].to_i
+
+        puts "path from #{[p.x.floor, p.y, p.z.floor].map(&:to_i).inspect} to #{[x, y, z].inspect}:"
+
+        if path = client.path_to(x, y, z)
+          puts "path:"
+          path.each {|p| puts "  #{p.inspect}" }
+        else
+          puts "no path found"
+        end
+
+
       when "a", "adjacent"
         p = client.position
         m = client.master_position

@@ -90,5 +90,9 @@ module Golem
       state.adjacent
     end
 
+    def path_to(x, y, z)
+      state.path_to(x, y, z)
+    end
+
   end
 end

@@ -112,6 +112,10 @@ module Golem
       map.available(position.x.floor, position.y.floor, position.z.floor)
     end
 
+    def path_to(x, y, z)
+      map.path([position.x.floor, position.y.to_i, position.z.floor].map(&:to_i), [x, y, z].map(&:to_i))
+    end
+
     protected
 
     def send_look

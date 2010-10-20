@@ -1,5 +1,8 @@
 module Golem
   class Map
+
+    MAX_PATH_SIZE = 64 # travel up to 4 chunks in one direction
+
     def initialize
       @chunks = {}
     end
@@ -46,6 +49,70 @@ module Golem
     def available(x, y, z)
       Location.new(self).available(x, y, z)
     end
+
+    # A* algorithm adapted from http://rubyquiz.com/quiz98.html
+    # with hints from http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+    def path(start, goal)
+      location = Location.new(self)
+      visited = {}
+      examined = 0
+
+      heap = Heap.new { |a, b| a.cost <=> b.cost }
+      heap.add Path.new(start, goal, [])
+
+      while !heap.empty?
+        point = heap.next
+
+        if point.path.size > MAX_PATH_SIZE
+          puts "examined #{examined} paths before giving up"
+          return nil
+        end
+
+        next if visited[point.point]
+        visited[point.point] = point
+
+        puts point.inspect
+        examined += 1
+
+        if point.point == goal
+          final_path = point.path + [point.point]
+          final_path.shift # don't need the start point, we're already there
+          puts "examined #{examined} paths"
+          return final_path
+        end
+
+        next_available = location.available(*point.point).each do |test|
+          next if visited[test]
+          heap.add Path.new(test, goal, point.path + [point.point])
+        end
+      end
+      nil
+    end
+
+  end
+
+  class Path
+    attr_reader :point, :goal, :path
+    def initialize(point, goal, path)
+      @point, @goal, @path = point, goal, path
+    end
+
+    def inspect
+      "<path #{point.inspect} (#{cost}): #{path.inspect}>"
+    end
+
+    def cost
+      heuristic =
+        (goal[0] - point[0]).abs +
+        (goal[1] - point[1]).abs +
+        (goal[2] - point[2]).abs
+      path_cost = path.size
+
+      # scale heuristic by 1% for better efficiency
+      # favors expansion near goal over expansion from start
+      # via http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html#S12
+      heuristic * 101 + path_cost * 100
+    end
   end
 
   class Location
@@ -74,6 +141,10 @@ module Golem
         end
       end
 
+      # up
+      # down
+      # change depending on what
+
       list
     end
 
@@ -88,4 +159,76 @@ module Golem
     end
 
   end
+
+  # from http://rubyquiz.com/quiz40.html
+  class Heap
+    def initialize( *elements, &comp )
+      @heap = [nil]
+      @comp = comp || lambda { |p, c| p <=> c }
+
+      add(*elements)
+    end
+
+    def clear
+      @heap = [nil]
+    end
+
+    def next
+      case size
+      when 0
+        nil
+      when 1
+        @heap.pop
+      else
+        extracted = @heap[1]
+        @heap[1] = @heap.pop
+        sift_down
+        extracted
+      end
+    end
+
+    def add(*elements)
+      elements.each do |element|
+        @heap << element
+        sift_up
+      end
+    end
+
+    def size
+      @heap.size - 1
+    end
+
+    def empty?
+      size == 0
+    end
+
+    def inspect
+      @heap[1..-1].inspect
+    end
+
+    private
+
+    def sift_down
+      i = 1
+      loop do
+        c = 2 * i
+        break if c >= @heap.size
+        c += 1 if c + 1 < @heap.size and @comp[@heap[c + 1], @heap[c]] < 0
+        break if @comp[@heap[i], @heap[c]] <= 0
+        @heap[c], @heap[i] = @heap[i], @heap[c]
+        i = c
+      end
+    end
+
+    def sift_up
+      i = @heap.size - 1
+      until i == 1
+        p = i / 2
+        break if @comp[@heap[p], @heap[i]] <= 0
+        @heap[p], @heap[i] = @heap[i], @heap[p]
+        i = p
+      end
+    end
+  end
+
 end
