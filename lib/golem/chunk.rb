@@ -105,7 +105,6 @@ module Golem
     :bookcase,
     :mossy_cobble,
     :obsidian,
-    :torch,
     :fire,
     :mob_spawner,
     # :wood_stairs,
