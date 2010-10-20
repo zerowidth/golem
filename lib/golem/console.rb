@@ -27,13 +27,18 @@ module Golem
       when "m", "move"
         x, y, z = args.split(" ").map(&:to_i)
 
-        unless x && y && z
+        unless x && y
           puts "usage: move <x> <y> <z> (integers)"
           return
         end
 
         # move to center of block
-        client.move_to x + 0.5, y, z + 0.5
+        if z
+          client.move_to x + 0.5, y, z + 0.5
+        else
+          client.move_to x + 0.5, client.position.y, y + 0.5
+        end
+
 
       when "b", "block"
         x, y, z = args.split(" ").map(&:to_i)

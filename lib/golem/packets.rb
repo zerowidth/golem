@@ -268,6 +268,9 @@ module Golem
       int :x
       short :y
       int :z
+      byte :size_x
+      byte :size_y
+      byte :size_z
       field :chunk, Field::MapChunk
     end
 
@@ -275,6 +278,19 @@ module Golem
       int :x
       int :z
       field :block_changes, Field::MultiBlockChange
+
+      def changes
+        offset_x = x * 16
+        offset_z = z * 16
+        coords = values[2]
+        types = values[3]
+        coords.map.with_index do |num, i|
+          change_x = ((num & 0xF000) >> 12) + offset_x
+          change_z = ((num & 0x0F00) >> 8) + offset_z
+          change_y = num & 0xFF
+          [[change_x, change_y, change_z], types[i]]
+        end
+      end
     end
 
     server_packet :block_change, 0x35 do

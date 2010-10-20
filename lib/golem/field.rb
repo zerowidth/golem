@@ -144,15 +144,14 @@ module Golem
 
     class MapChunk < Base
       def parse(data)
-        size_x, size_y, size_z, chunk_size, data = consume data, "cccN"
-        # total_entries = (size_x + 1) * (size_y + 1) * (size_z + 1)
+        chunk_size, data = consume data, "N"
         if data.size >= chunk_size
           chunk_data = data[0...chunk_size]
           data = data[chunk_size..-1]
         else
           raise IncompletePacket
         end
-        [size_x + 1, size_y + 1, size_z + 1, chunk_data, data]
+        [chunk_data, data]
       end
     end
 
@@ -169,8 +168,8 @@ module Golem
       def parse(data)
         array_size, data = consume data, "n"
         *coords, data = consume data, "n#{array_size}"
-        *types, data = consume data, "c#{array_size}"
-        *metadata, data = consume data, "c#{array_size}"
+        *types, data = consume data, "C#{array_size}"
+        *metadata, data = consume data, "C#{array_size}"
         [coords, types, metadata, data]
       end
     end

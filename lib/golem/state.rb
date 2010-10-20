@@ -57,7 +57,7 @@ module Golem
         if entities[packet.id]
           deltas = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
           entities[packet.id] = entities[packet.id].map.with_index { |v, i| v + deltas[i] }
-          if @master == packet.id
+          if master == packet.id
             look_at_master
             send_look
           end
@@ -78,14 +78,16 @@ module Golem
 
       when :map_chunk
         send_packet :flying_ack, true
-        map.add Chunk.new(packet.x, packet.z, packet.values.last)
+        map.add Chunk.new(packet.x, packet.y, packet.z, packet.size_x, packet.size_y, packet.size_z, packet.values.last)
 
       when :block_change
-        # TODO update map
+        map[packet.x, packet.y, packet.z] = BLOCKS[packet.type]
 
       when :multi_block_change
-        # TODO update map
-
+        packet.changes.each do |location, type|
+          map[*location] = BLOCKS[type]
+        end
+        send_packet :flying_ack, true
       end
 
     end

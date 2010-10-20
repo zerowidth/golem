@@ -15,13 +15,27 @@ module Golem
 
     def []=(x, y, z, type)
       c = self.chunk(x, z)
-      c && c[x, y, z] = type
+      if c && c[x, y, z]
+        c[x, y, z] = type
+      elsif c
+        puts "got chunk but not offset: #{[x,y,z].inspect}"
+      else
+        puts "couldn't find chunk to assign block to: #{[x,y,z].inspect} #{type.inspect}"
+      end
     end
 
     # add a chunk to the map
     def add(chunk)
-      @chunks[chunk.x / 16] ||= {}
-      @chunks[chunk.x / 16][chunk.z / 16] = chunk
+
+      if chunk.full_chunk?
+        @chunks[chunk.x / 16] ||= {}
+        @chunks[chunk.x / 16][chunk.z / 16] = chunk
+      else
+        puts "mini chunk, updating!"
+        chunk.each do |location, type|
+          self[*location] = type
+        end
+      end
     end
 
     # drop a chunk from the map
