@@ -92,6 +92,9 @@ module Golem
 
     end
 
+    def master_position
+      master ? entities[master] : []
+    end
     def move(x, y, z)
       position.x = x
       position.y = y

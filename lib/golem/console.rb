@@ -17,6 +17,7 @@ module Golem
 
     def receive_data(data)
       command, args = data.strip.split(/\s+/, 2)
+      args ||= ""
       case command
       when "p", "pos", "position"
         puts "position: #{client.position.inspect}"
@@ -51,7 +52,15 @@ module Golem
 
       when "a", "adjacent"
         p = client.position
+        m = client.master_position
+
         puts "position: #{[p.x.floor, p.y, p.z.floor].inspect}"
+        if m
+          puts "master  : #{[m[0].floor, m[1], m[2].floor].inspect}"
+        else
+          puts "no master :("
+        end
+        puts "adjacent locations:"
         client.adjacent.each {|a| puts "  - #{a.inspect}" }
 
       when "d", "debug"

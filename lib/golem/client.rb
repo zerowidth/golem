@@ -74,6 +74,10 @@ module Golem
       state.position
     end
 
+    def master_position
+      state.master_position
+    end
+
     def move_to(x, y, z)
       state.move(x, y, z)
     end
