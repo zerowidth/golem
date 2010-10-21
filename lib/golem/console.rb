@@ -40,7 +40,6 @@ module Golem
           client.move_to x + 0.5, client.position.y, y + 0.5
         end
 
-
       when "b", "block"
         x, y, z = args.split(" ").map(&:to_i)
         unless x && y && z
@@ -80,13 +79,12 @@ module Golem
           puts "no path found"
         end
 
-
       when "a", "adjacent"
         p = client.position
         m = client.master_position
 
         puts "position: #{[p.x.floor, p.y, p.z.floor].inspect}"
-        if m
+        if m && m[0]
           puts "master  : #{[m[0].floor, m[1], m[2].floor].inspect}"
         else
           puts "no master :("

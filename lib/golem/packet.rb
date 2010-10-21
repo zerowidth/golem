@@ -118,11 +118,6 @@ module Golem
       @values = values
     end
 
-    attr_writer :wait
-    def wait
-      @wait ||= 0
-    end
-
     def parse(data)
       @values = []
       self.class.fields.each do |field|

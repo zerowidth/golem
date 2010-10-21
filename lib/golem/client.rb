@@ -1,25 +1,22 @@
 module Golem
   class Client < ::EventMachine::Connection
 
-    attr_reader :parser, :state
+    attr_reader :parser, :state, :packet_channel
 
     def initialize
-      @state = State.new
-    end
-
-    def send_packet(packet)
-      if packet == :disconnect
-        close_connection
-      else
-        debug "<-- client  #{packet.inspect}"
-        send_data packet.encode
-      end
+      @packet_channel = EM::Channel.new
+      @state = State.new @packet_channel
     end
 
     def post_init
       @parser = Parser.new
       puts "client connected"
-      send_response_data
+
+      packet_channel.subscribe do |packet|
+        debug "<-- client  #{packet.inspect}"
+        send_data packet.encode
+      end
+
     rescue => e
       puts e.inspect
       puts e.backtrace
@@ -36,21 +33,10 @@ module Golem
         debug "server --> #{packet.inspect}"
         state.update(packet)
       end
-      send_response_data
     rescue => e
       puts e.inspect
       puts e.backtrace
       raise
-    end
-
-    def send_response_data
-      state.respond do |packet|
-        if Symbol === :packet || packet.wait == 0
-          send_packet packet
-        else
-          EM.add_timer(packet.wait) { send_packet packet }
-        end
-      end
     end
 
     attr_reader :debug_pattern
@@ -79,7 +65,7 @@ module Golem
     end
 
     def move_to(x, y, z)
-      state.move(x, y, z)
+      state.move_to(x, y, z)
     end
 
     def block_at(x, y, z)

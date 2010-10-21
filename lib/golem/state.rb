@@ -6,21 +6,32 @@ module Golem
 
     STANCE = 1.62000000476837
 
-    attr_reader :entities, :position, :master
+    attr_reader :entities, :position, :master, :packet_channel
 
-    def initialize
+    def initialize(packet_channel)
+      @packet_channel = packet_channel
       @position = Position.new
       @entities = {}
       @master = nil
+      @pending_packets = []
       send_delayed 0.5, :handshake, "golem"
 
       # keepalive
       EM.add_periodic_timer(5) { send_packet :flying_ack, @position.flying }
-    end
 
-    def respond
-      while !packets_to_send.empty?
-        yield packets_to_send.shift
+      # pending moves
+      EM.add_periodic_timer(0.1) do
+        if move = pending_moves.shift
+          x, y, z = *move
+          puts "moving to #{x} #{y} #{z}"
+          position.x = x + 0.5
+          position.y = y
+          position.z = z + 0.5
+          position.stance = y + STANCE
+          position.flying = !map.solid?(x, y - 1, z)
+          look_at_master
+          send_move_look
+        end
       end
     end
 
@@ -31,7 +42,7 @@ module Golem
         send_packet :login, 2, "golem", "password"
 
       when :disconnect
-        packets_to_send << :disconnect
+        EM.stop
 
       when :player_move_look
         x, stance, y, z, rotation, pitch, flying = packet.values
@@ -73,7 +84,7 @@ module Golem
 
       when :pre_chunk
         if !packet.add
-          map.delete(packet.x, packet.z)
+          map.drop(packet.x, packet.z)
         end
 
       when :map_chunk
@@ -87,7 +98,7 @@ module Golem
         packet.changes.each do |location, type|
           map[*location] = BLOCKS[type]
         end
-        send_packet :flying_ack, true
+        send_packet :flying_ack, position.flying
       end
 
     end
@@ -95,14 +106,15 @@ module Golem
     def master_position
       master ? entities[master] : []
     end
-    def move(x, y, z)
-      position.x = x
-      position.y = y
-      position.stance = y + STANCE
-      position.z = z
-      look_at_master
-      send_move_look
-    end
+
+    # def move(x, y, z)
+    #   position.x = x
+    #   position.y = y
+    #   position.stance = y + STANCE
+    #   position.z = z
+    #   look_at_master
+    #   send_move_look
+    # end
 
     def block_at(x, y, z)
       map[x, y, z]
@@ -114,6 +126,13 @@ module Golem
 
     def path_to(x, y, z)
       map.path([position.x.floor, position.y.to_i, position.z.floor].map(&:to_i), [x, y, z].map(&:to_i))
+    end
+
+    def move_to(x, y, z)
+      if path = map.path([position.x.floor, position.y.to_i, position.z.floor].map(&:to_i), [x, y, z].map(&:to_i))
+        pending_moves.clear
+        pending_moves.concat path
+      end
     end
 
     protected
@@ -139,18 +158,17 @@ module Golem
 
     def send_packet(kind, *values)
       packet_class = Packet.client_packets_by_kind[kind] or raise ArgumentError, "unknown packet type #{kind.inspect}"
-      packets_to_send << packet_class.new(*values)
+      packet_channel.push packet_class.new(*values)
     end
 
     def send_delayed(delay, kind, *values)
       packet_class = Packet.client_packets_by_kind[kind] or raise ArgumentError, "unknown packet type #{kind.inspect}"
       packet = packet_class.new(*values)
-      packet.wait = delay
-      packets_to_send << packet
+      EM.add_timer(delay) { packet_channel.push packet }
     end
 
-    def packets_to_send
-      @packets_to_send ||= []
+    def pending_moves
+      @pending_moves ||= []
     end
 
   end

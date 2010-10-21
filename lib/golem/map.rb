@@ -34,7 +34,6 @@ module Golem
         @chunks[chunk.x / 16] ||= {}
         @chunks[chunk.x / 16][chunk.z / 16] = chunk
       else
-        puts "mini chunk, updating!"
         chunk.each do |location, type|
           self[*location] = type
         end
@@ -44,6 +43,10 @@ module Golem
     # drop a chunk from the map
     def drop(x, z)
       @chunks[x/16] && @chunks[x/16].delete(z/16)
+    end
+
+    def solid?(x, y, z)
+      SOLID.include?(self[x, y, z])
     end
 
     def available(x, y, z)
@@ -121,6 +124,7 @@ module Golem
     SOUTH = [1, 0, 0]
     WEST  = [0, 0, 1]
     UP    = [0, 1, 0]
+    DOWN  = [0, -1, 0]
 
     attr_reader :map
 
@@ -133,8 +137,8 @@ module Golem
       list = []
       standing_on = map[x, y, z]
 
-      # look in ordinal directions:
-      [NORTH, EAST, SOUTH, WEST].map do |transform|
+      # the bot can fly for now, so whatever:
+      [NORTH, EAST, SOUTH, WEST, UP, DOWN].map do |transform|
         test = combine(pos, transform)
         if pass?(*test) && pass?(*(combine(test, UP)))
           list << test
