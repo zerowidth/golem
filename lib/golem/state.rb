@@ -95,7 +95,9 @@ module Golem
         end
 
       when :pre_chunk
-        if !packet.add
+        if packet.add
+          map.preinitialize(packet.x, packet.z)
+        else
           map.drop(packet.x, packet.z)
         end
 
@@ -103,9 +105,7 @@ module Golem
         puts "map chunk"
         send_packet :flying_ack, true
         before = map.size
-        puts "loading map... " if before == 0
         map.add Chunk.new(packet.x, packet.y, packet.z, packet.size_x, packet.size_y, packet.size_z, packet.values.last)
-        puts "map loaded!" if before < 441 && map.size == 441
 
       when :block_change
         puts "block change"

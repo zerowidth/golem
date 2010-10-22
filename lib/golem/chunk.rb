@@ -144,16 +144,23 @@ module Golem
 
     attr_reader :x, :y, :z
     attr_reader :size_x, :size_y, :size_z
+    attr_reader :blocks
 
     def initialize(x, y, z, size_x, size_y, size_z, data)
       # sizes are raw from packet, so add 1
       @x, @y, @z = x, y, z
       @size_x, @size_y, @size_z = size_x + 1, size_y + 1, size_z + 1
-      data = Zlib::Inflate.inflate(data)
-      size = @size_x * @size_y * @size_z
-      *block_types = data[0...size].unpack("c#{size}")
-      block_types.each do |code|
-        blocks << BLOCKS[code]
+
+      if data
+        @blocks = []
+        data = Zlib::Inflate.inflate(data)
+        size = @size_x * @size_y * @size_z
+        *block_types = data[0...size].unpack("c#{size}")
+        block_types.each do |code|
+          blocks << BLOCKS[code]
+        end
+      else
+        @blocks = Array.new(@size_x * @size_y * @size_z) { :air }
       end
     end
 
@@ -206,10 +213,6 @@ module Golem
         end
       end
       found
-    end
-
-    def blocks
-      @blocks ||= []
     end
 
   end

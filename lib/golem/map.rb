@@ -29,6 +29,11 @@ module Golem
       end
     end
 
+    def preinitialize(x, z)
+      @chunks[x] ||= {}
+      @chunks[x][z] = Chunk.new(x * 16, 0, z * 16, 15, 127, 15, nil)
+    end
+
     # add a chunk to the map
     def add(chunk)
 
@@ -45,7 +50,7 @@ module Golem
 
     # drop a chunk from the map
     def drop(x, z)
-      @chunks[x/16] && @chunks[x/16].delete(z/16)
+      @chunks[x] && @chunks[x].delete(z)
     end
 
     def size
