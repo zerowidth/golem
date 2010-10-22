@@ -100,6 +100,7 @@ module Golem
         end
 
       when :map_chunk
+        puts "map chunk"
         send_packet :flying_ack, true
         before = map.size
         puts "loading map... " if before == 0
@@ -107,9 +108,11 @@ module Golem
         puts "map loaded!" if before < 441 && map.size == 441
 
       when :block_change
+        puts "block change"
         map[packet.x, packet.y, packet.z] = BLOCKS[packet.type]
 
       when :multi_block_change
+        puts "multi block change"
         packet.changes.each do |location, type|
           map[*location] = BLOCKS[type]
         end
@@ -150,12 +153,17 @@ module Golem
         if follow_mode == :watch
           send_look
         else
-          puts "has moved, updating path"
-          path = map.path([position.x.floor, position.y.to_i, position.z.floor].map(&:to_i), current)
-          if path && path.size > 0
-            pending_moves.clear
-            path.pop # drop the last move
-            pending_moves.concat path
+          my_position = [position.x.floor, position.y.to_i, position.z.floor].map(&:to_i)
+          next_to_player = map.available(*current, :follow)
+
+          if next_to_player.size > 0
+            path = map.path(my_position, next_to_player)
+            if path && path.size > 0
+              pending_moves.clear
+              pending_moves.concat path
+            end
+          else
+            puts "nowhere to go, can't follow master!"
           end
         end
 

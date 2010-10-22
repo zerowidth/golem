@@ -53,36 +53,39 @@ module Golem
     end
 
     def validate
+      bad = nil
       if bad = @chunks.detect {|x, chunks_x| chunks_x.detect { |y, c| !c.valid?} }
         puts "bad chunk: #{c.x} #{c.z}"
       end
+      bad.nil?
     end
 
     def solid?(x, y, z)
       SOLID.include?(self[x, y, z])
     end
 
-    def available(x, y, z)
-      Location.new(self).available(x, y, z)
+    def available(x, y, z, mode = :move)
+      Location.new(self).available(x, y, z, mode)
     end
 
     # A* algorithm adapted from http://rubyquiz.com/quiz98.html
     # with hints from http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-    def path(start, goal)
+    def path(start, goals)
+      goals = goals.flatten.size == 3 ? [goals.flatten] : goals
+
       location = Location.new(self)
-      if (start[0] - goal[0]).abs + (start[1] - goal[1]).abs + (start[2] - goal[2]).abs > MAX_PATH_SIZE
-        puts "target too far away: #{start.inspect} --> #{goal.inspect}"
+      if goals.reject { |goal| (start[0] - goal[0]).abs + (start[1] - goal[1]).abs + (start[2] - goal[2]).abs > MAX_PATH_SIZE }.empty?
+        puts "target too far away"
         return nil
-      elsif !location.allowed?(*goal)
-        puts "can't follow!"
+      elsif goals.select { |g| location.allowed?(*g) }.empty?
+        puts "can't follow, nowhere to go"
         return nil
       end
       visited = {}
       examined = 0
 
       heap = Heap.new { |a, b| a.cost <=> b.cost }
-      heap.add Path.new(start, goal, [])
-
+      heap.add Path.new(start, goals, [])
 
       while !heap.empty?
         point = heap.next
@@ -97,7 +100,7 @@ module Golem
 
         examined += 1
 
-        if point.point == goal
+        if goals.include? point.point
           final_path = point.path + [point.point]
           final_path.shift # don't need the start point, we're already there
           puts "examined #{examined} paths"
@@ -106,7 +109,7 @@ module Golem
 
         next_available = location.available(*point.point).each do |test|
           next if visited[test]
-          heap.add Path.new(test, goal, point.path + [point.point])
+          heap.add Path.new(test, goals, point.path + [point.point])
         end
       end
       nil
@@ -115,9 +118,9 @@ module Golem
   end
 
   class Path
-    attr_reader :point, :goal, :path
-    def initialize(point, goal, path)
-      @point, @goal, @path = point, goal, path
+    attr_reader :point, :goals, :path
+    def initialize(point, goals, path)
+      @point, @goals, @path = point, goals, path
     end
 
     def inspect
@@ -125,16 +128,18 @@ module Golem
     end
 
     def cost
-      heuristic =
-        (goal[0] - point[0]).abs +
-        (goal[1] - point[1]).abs +
-        (goal[2] - point[2]).abs
-      path_cost = path.size
+      goals.map do |goal|
+        heuristic =
+          (goal[0] - point[0]).abs +
+          (goal[1] - point[1]).abs +
+          (goal[2] - point[2]).abs
+        path_cost = path.size
 
-      # scale heuristic by 1% for better efficiency
-      # favors expansion near goal over expansion from start
-      # via http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html#S12
-      heuristic * 101 + path_cost * 100
+        # scale heuristic by 1% for better efficiency
+        # favors expansion near goal over expansion from start
+        # via http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html#S12
+        heuristic * 101 + path_cost * 100
+      end.min
     end
   end
 
@@ -152,24 +157,44 @@ module Golem
       @map = map
     end
 
-    def available(x, y, z)
+    def available(x, y, z, mode = :move)
       pos = [x, y, z]
       list = []
-      standing_on = map[x, y, z]
 
-      [NORTH, EAST, SOUTH, WEST, DOWN, UP].map do |transform|
-        test = combine(pos, transform)
-        list << test if allowed?(*test)
+      transforms = []
+      allow_flight = true
+
+      case mode
+      when :move # all movements allowed
+        transforms = [[NORTH], [EAST], [SOUTH], [WEST], [DOWN], [UP]]
+      when :follow # following someone, don't get up in their business
+        transforms = [
+          [NORTH], [EAST], [SOUTH], [WEST],
+          [NORTH, DOWN], [EAST, DOWN], [WEST, DOWN], [SOUTH, DOWN],
+          [NORTH, UP], [EAST, UP], [WEST, UP], [SOUTH, UP]
+        ]
+        allow_flight = false
+      end
+
+      transforms.map do |transform|
+        test = pos
+        transform.each {|xform| test = combine(test, xform) }
+        list << test if allowed?(*test, allow_flight)
       end
 
       list
     end
 
-    def allowed?(x, y, z)
+    def allowed?(x, y, z, allow_flight = true)
       block = map[x, y, z]
       above = y == 127 ? :air : map[x, y + 1, z]
-      # below = map[x, y - 1, z]
-      !SOLID.include?(block) && !SOLID.include?(above)
+      below = map[x, y - 1, z]
+      open = !SOLID.include?(block) && !SOLID.include?(above)
+      if allow_flight
+        open
+      else
+        open && SOLID.include?(below) || WATER.include?(below)
+      end
     end
 
     def combine(start, delta)

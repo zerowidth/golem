@@ -133,6 +133,11 @@ module Golem
     :fence
   ]
 
+  WATER = [
+    :water,
+    :still_water
+  ]
+
   class Chunk
 
     FULL_CHUNK = 16 * 16 * 128
