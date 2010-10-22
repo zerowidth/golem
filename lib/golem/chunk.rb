@@ -81,8 +81,9 @@ module Golem
     :cobble,
     :wood,
     :bedrock,
-    :water,
-    :still_water,
+    # allow swimming
+    # :water,
+    # :still_water,
     :lava,
     :still_lava,
     :sand,
@@ -153,6 +154,10 @@ module Golem
 
     def full_chunk?
       blocks.size == FULL_CHUNK
+    end
+
+    def valid?
+      blocks.all? {|b| b}
     end
 
     # for iterating over and sending updates

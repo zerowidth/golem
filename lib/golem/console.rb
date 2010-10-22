@@ -65,30 +65,19 @@ module Golem
           puts "no path found"
         end
 
-      when "come"
-        p = client.position
-        m = client.master_position
-        x, y, z = m[0].to_i, m[1].to_i, m[2].to_i
-
-        puts "path from #{[p.x.floor, p.y, p.z.floor].map(&:to_i).inspect} to #{[x, y, z].inspect}:"
-
-        if path = client.path_to(x, y, z)
-          puts "path:"
-          path.each {|p| puts "  #{p.inspect}" }
+      when "f", "follow"
+        if args == "" || args == "on"
+          puts "following master"
+          client.follow true
         else
-          puts "no path found"
+          puts "staying here, then."
+          client.follow false
         end
 
       when "a", "adjacent"
         p = client.position
-        m = client.master_position
 
         puts "position: #{[p.x.floor, p.y, p.z.floor].inspect}"
-        if m && m[0]
-          puts "master  : #{[m[0].floor, m[1], m[2].floor].inspect}"
-        else
-          puts "no master :("
-        end
         puts "adjacent locations:"
         client.adjacent.each {|a| puts "  - #{a.inspect}" }
 

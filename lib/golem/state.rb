@@ -1,19 +1,23 @@
 module Golem
 
   Position = Struct.new(:x, :y, :stance, :z, :rotation, :pitch, :flying)
+  Entity = Struct.new(:position, :follow_position)
 
   class State
 
     STANCE = 1.62000000476837
 
-    attr_reader :entities, :position, :master, :packet_channel
+    attr_reader :entities, :position, :packet_channel, :following
+    attr_accessor :follow_mode
 
-    def initialize(packet_channel)
+    def initialize(packet_channel, opts={})
       @packet_channel = packet_channel
       @position = Position.new
       @entities = {}
-      @master = nil
-      @pending_packets = []
+      @follow_player = opts[:follow]
+      @following = nil
+      @follow_mode = :watch # or :look
+
       send_delayed 0.5, :handshake, "golem"
 
       # keepalive
@@ -29,7 +33,6 @@ module Golem
           position.z = z + 0.5
           position.stance = y + STANCE
           position.flying = !map.solid?(x, y - 1, z)
-          look_at_master
           send_move_look
         end
       end
@@ -58,29 +61,38 @@ module Golem
         # don't care
 
       when :vehicle_spawn, :mob_spawn
-        entities[packet.id] = [packet.x, packet.y, packet.z]
+        entities[packet.id] = Entity.new([packet.x, packet.y, packet.z], nil)
 
       when :named_entity_spawn
-        entities[packet.id] = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
-        @master ||= packet.id
+        pos = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
+        follow_pos = pos.map { |c| c.floor.to_i }
+        entities[packet.id] = Entity.new pos, follow_pos
+        if packet.name == @follow_player
+          puts "yay, #{@follow_player} is here!"
+          @following = entities[packet.id]
+          follow
+        end
 
       when :entity_move, :entity_move_look
-        if entities[packet.id]
+        if entity = entities[packet.id]
           deltas = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
-          entities[packet.id] = entities[packet.id].map.with_index { |v, i| v + deltas[i] }
-          if master == packet.id
-            look_at_master
-            send_look
-          end
+          new_pos = entity.position.map.with_index { |v, i| v + deltas[i] }
+          entity.position = new_pos
+          follow if entity == @following
         end
 
       when :entity_teleport
         if entities[packet.id]
-          entities[packet.id] = [packet.x, packet.y, packet.z].map { |v| v / 32 }
+          entities[packet.id].position = [packet.x, packet.y, packet.z].map { |v| v / 32 }
+          follow if entity == @following
         end
 
       when :destroy_entity
-        entities.delete packet.id
+        deleted = entities.delete packet.id
+        if following == deleted
+          puts "#{@follow_player} has gone away :("
+          @following = nil
+        end
 
       when :pre_chunk
         if !packet.add
@@ -89,7 +101,10 @@ module Golem
 
       when :map_chunk
         send_packet :flying_ack, true
+        before = map.size
+        puts "loading map... " if before == 0
         map.add Chunk.new(packet.x, packet.y, packet.z, packet.size_x, packet.size_y, packet.size_z, packet.values.last)
+        puts "map loaded!" if before < 441 && map.size == 441
 
       when :block_change
         map[packet.x, packet.y, packet.z] = BLOCKS[packet.type]
@@ -103,19 +118,6 @@ module Golem
 
     end
 
-    def master_position
-      master ? entities[master] : []
-    end
-
-    # def move(x, y, z)
-    #   position.x = x
-    #   position.y = y
-    #   position.stance = y + STANCE
-    #   position.z = z
-    #   look_at_master
-    #   send_move_look
-    # end
-
     def block_at(x, y, z)
       map[x, y, z]
     end
@@ -128,10 +130,35 @@ module Golem
       map.path([position.x.floor, position.y.to_i, position.z.floor].map(&:to_i), [x, y, z].map(&:to_i))
     end
 
-    def move_to(x, y, z)
-      if path = map.path([position.x.floor, position.y.to_i, position.z.floor].map(&:to_i), [x, y, z].map(&:to_i))
-        pending_moves.clear
-        pending_moves.concat path
+    def follow
+      return unless following && position.x
+
+      current = following.position.map { |v| v.floor.to_i }
+
+      if following.follow_position.nil?
+        following.follow_position = current
+      end
+
+      if following.follow_position != current
+        following.follow_position = current
+        x, y, z = *current
+        # + 0.001 so it's never 0, which causes an error
+        position.pitch = Math.atan2(position.y - y, Math.sqrt((position.x - x + 0.5)**2 + (position.z - z + 0.5)**2) + 0.001).in_degrees
+        puts [position.z - z + 0.5, position.x - x + 0.5].inspect
+        position.rotation = Math.atan2(position.z - z + 0.5, position.x - x + 0.5 + 0.001).in_degrees + 90
+
+        if follow_mode == :watch
+          send_look
+        else
+          puts "has moved, updating path"
+          path = map.path([position.x.floor, position.y.to_i, position.z.floor].map(&:to_i), current)
+          if path && path.size > 0
+            pending_moves.clear
+            path.pop # drop the last move
+            pending_moves.concat path
+          end
+        end
+
       end
     end
 
@@ -147,13 +174,6 @@ module Golem
 
     def map
       @map ||= Map.new
-    end
-
-    def look_at_master
-      x, y, z = entities[@master]
-      return unless x && y && z
-      position.pitch = Math.atan2(position.y - y, Math.sqrt((position.x - x)**2 + (position.z - z)**2)).in_degrees
-      position.rotation = Math.atan2(position.z - z, position.x - x).in_degrees + 90
     end
 
     def send_packet(kind, *values)

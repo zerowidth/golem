@@ -3,4 +3,4 @@ require "rubygems"
 $:.unshift "./lib"
 
 require "golem"
-Golem::Client.run("127.0.0.1")
+Golem::Session.start("127.0.0.1", :follow => "aniero")

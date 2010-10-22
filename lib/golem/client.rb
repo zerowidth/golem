@@ -3,9 +3,9 @@ module Golem
 
     attr_reader :parser, :state, :packet_channel
 
-    def initialize
+    def initialize(opts={})
       @packet_channel = EM::Channel.new
-      @state = State.new @packet_channel
+      @state = State.new @packet_channel, opts
     end
 
     def post_init
@@ -60,10 +60,6 @@ module Golem
       state.position
     end
 
-    def master_position
-      state.master_position
-    end
-
     def move_to(x, y, z)
       state.move_to(x, y, z)
     end
@@ -78,6 +74,10 @@ module Golem
 
     def path_to(x, y, z)
       state.path_to(x, y, z)
+    end
+
+    def follow(flag)
+      state.follow_mode = flag ? :follow : :watch
     end
 
   end

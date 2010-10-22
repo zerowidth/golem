@@ -1,7 +1,7 @@
 module Golem
   class Map
 
-    MAX_PATH_SIZE = 64 # travel up to 4 chunks in one direction
+    MAX_PATH_SIZE = 32
 
     def initialize
       @chunks = {}
@@ -13,7 +13,9 @@ module Golem
 
     def [](x, y, z)
       c = self.chunk(x, z)
-      c && c[x, y, z]
+      block = c && c[x, y, z]
+      raise "invalid block #{[x, y, z].inspect} is #{block}" unless block
+      block
     end
 
     def []=(x, y, z, type)
@@ -37,12 +39,23 @@ module Golem
         chunk.each do |location, type|
           self[*location] = type
         end
+        validate
       end
     end
 
     # drop a chunk from the map
     def drop(x, z)
       @chunks[x/16] && @chunks[x/16].delete(z/16)
+    end
+
+    def size
+      @chunks.map { |k, v| v.size }.inject(0) {|v,m| v + m }
+    end
+
+    def validate
+      if bad = @chunks.detect {|x, chunks_x| chunks_x.detect { |y, c| !c.valid?} }
+        puts "bad chunk: #{c.x} #{c.z}"
+      end
     end
 
     def solid?(x, y, z)
@@ -57,11 +70,19 @@ module Golem
     # with hints from http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
     def path(start, goal)
       location = Location.new(self)
+      if (start[0] - goal[0]).abs + (start[1] - goal[1]).abs + (start[2] - goal[2]).abs > MAX_PATH_SIZE
+        puts "target too far away: #{start.inspect} --> #{goal.inspect}"
+        return nil
+      elsif !location.allowed?(*goal)
+        puts "can't follow!"
+        return nil
+      end
       visited = {}
       examined = 0
 
       heap = Heap.new { |a, b| a.cost <=> b.cost }
       heap.add Path.new(start, goal, [])
+
 
       while !heap.empty?
         point = heap.next
@@ -74,7 +95,6 @@ module Golem
         next if visited[point.point]
         visited[point.point] = point
 
-        puts point.inspect
         examined += 1
 
         if point.point == goal
@@ -137,25 +157,19 @@ module Golem
       list = []
       standing_on = map[x, y, z]
 
-      # the bot can fly for now, so whatever:
-      [NORTH, EAST, SOUTH, WEST, UP, DOWN].map do |transform|
+      [NORTH, EAST, SOUTH, WEST, DOWN, UP].map do |transform|
         test = combine(pos, transform)
-        if pass?(*test) && pass?(*(combine(test, UP)))
-          list << test
-        end
+        list << test if allowed?(*test)
       end
-
-      # up
-      # down
-      # change depending on what
 
       list
     end
 
-    def pass?(x, y, z)
+    def allowed?(x, y, z)
       block = map[x, y, z]
-      # don't pathfind into the unknown!
-      !block.nil? && !SOLID.include?(map[x, y, z])
+      above = y == 127 ? :air : map[x, y + 1, z]
+      # below = map[x, y - 1, z]
+      !SOLID.include?(block) && !SOLID.include?(above)
     end
 
     def combine(start, delta)
