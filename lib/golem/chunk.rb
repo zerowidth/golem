@@ -173,15 +173,21 @@ module Golem
     end
 
     # for iterating over and sending updates
-    def each
+    def each_column
       (0...size_x).each do |x|
-        (0...size_y).each do |y|
-          (0...size_z).each do |z|
-            yield [[x + self.x, y + self.y, z + self.z], local(x, y, z)]
-          end
+        (0...size_z).each do |z|
+          offset = (x * size_z * size_y) + (z * size_y)
+          yield x + self.x, self.y, z + self.z, blocks[offset..(offset + size_y)]
         end
       end
+    end
 
+    def update(x, y, z, data)
+      x = x - self.x
+      y = y - self.y
+      z = z - self.z
+      offset = (x * size_z * size_y) + (z * size_y) + y
+      blocks[offset..(offset+data.size)] = data
     end
 
     # access using chunk-localized coords, x=0..15, y=0..127, z=0..15

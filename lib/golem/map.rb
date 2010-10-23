@@ -36,15 +36,27 @@ module Golem
 
     # add a chunk to the map
     def add(chunk)
-
       if chunk.full_chunk?
         @chunks[chunk.x / 16] ||= {}
+        # if @chunks[chunk.x / 16][chunk.z / 16]
+        #   puts "replacing: #{[chunk.x, chunk.z].inspect}"
+        # else
+        #   puts "adding   : #{[chunk.x, chunk.z].inspect}"
+        # end
         @chunks[chunk.x / 16][chunk.z / 16] = chunk
       else
-        chunk.each do |location, type|
-          self[*location] = type
+        puts "incremental: #{[chunk.x, chunk.y, chunk.z].inspect} #{[chunk.size_x, chunk.size_y, chunk.size_z].inspect}"
+        chunk.each_column do |x, y, z, data|
+          # puts "updating #{[x,y,z].inspect} #{data.size} blocks"
+          update(x, y, z, data)
         end
-        validate
+      end
+    end
+
+    # update a section of data incrementally
+    def update(x, y, z, data)
+      if c = chunk(x, z)
+        c.update(x, y, z, data)
       end
     end
 
@@ -55,14 +67,6 @@ module Golem
 
     def size
       @chunks.map { |k, v| v.size }.inject(0) {|v,m| v + m }
-    end
-
-    def validate
-      bad = nil
-      if bad = @chunks.detect {|x, chunks_x| chunks_x.detect { |y, c| !c.valid?} }
-        puts "bad chunk: #{c.x} #{c.z}"
-      end
-      bad.nil?
     end
 
     def solid?(x, y, z)
