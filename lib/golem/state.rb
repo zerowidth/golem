@@ -19,9 +19,7 @@ module Golem
       @follow_mode = :watch # or :look
 
       send_delayed 0.5, :handshake, "golem"
-
-      # keepalive
-      EM.add_periodic_timer(5) { send_packet :flying_ack, @position.flying }
+      # send_packet :handshake, "golem"
 
       # pending moves
       EM.add_periodic_timer(0.1) do
@@ -32,8 +30,16 @@ module Golem
           position.y = y
           position.z = z + 0.5
           position.stance = y + STANCE
-          position.flying = !map.solid?(x, y - 1, z)
+          position.flying = map.solid?(x, y - 1, z)
           send_move_look
+        end
+      end
+
+
+      EM.add_periodic_timer(1) do
+        while dig = pending_digs.shift
+        # if dig = pending_digs.shift
+          send_packet(*dig)
         end
       end
     end
@@ -43,6 +49,9 @@ module Golem
 
       when :server_handshake
         send_packet :login, 2, "golem", "password"
+        # keepalive
+        EM.add_periodic_timer(0.5) { send_packet :flying_ack, @position.flying }
+        EM.add_periodic_timer(10) { send_packet :keepalive }
 
       when :disconnect
         EM.stop
@@ -102,17 +111,17 @@ module Golem
         end
 
       when :map_chunk
-        puts "map chunk"
+        # puts "map chunk"
         send_packet :flying_ack, true
         before = map.size
         map.add Chunk.new(packet.x, packet.y, packet.z, packet.size_x, packet.size_y, packet.size_z, packet.values.last)
 
       when :block_change
-        puts "block change"
+        # puts "block change"
         map[packet.x, packet.y, packet.z] = BLOCKS[packet.type]
 
       when :multi_block_change
-        puts "multi block change"
+        # puts "multi block change"
         packet.changes.each do |location, type|
           map[*location] = BLOCKS[type]
         end
@@ -133,6 +142,10 @@ module Golem
       map.path([position.x.floor, position.y.to_i, position.z.floor].map(&:to_i), [x, y, z].map(&:to_i))
     end
 
+    def follow_position
+      following ? following.follow_position : nil
+    end
+
     def follow
       return unless following && position.x
 
@@ -145,10 +158,9 @@ module Golem
       if following.follow_position != current
         following.follow_position = current
         x, y, z = *current
-        # + 0.001 so it's never 0, which causes an error
-        position.pitch = Math.atan2(position.y - y, Math.sqrt((position.x - x + 0.5)**2 + (position.z - z + 0.5)**2) + 0.001).in_degrees
-        puts [position.z - z + 0.5, position.x - x + 0.5].inspect
-        position.rotation = Math.atan2(position.z - z + 0.5, position.x - x + 0.5 + 0.001).in_degrees + 90
+
+        # + 1 to look at the player's head, not feet
+        look_at(x, y + 1, z)
 
         if follow_mode == :watch
           send_look
@@ -168,6 +180,59 @@ module Golem
         end
 
       end
+    end
+
+    def equip(code)
+      send_packet :block_item_switch, 0, code
+    end
+
+    def dig(x, y, z, direction)
+      look_at(x, y, z)
+      send_look
+      direction ||= 0
+
+      to_send = []
+
+      # (0..5).each do |direction|
+        # equip 277 # diamond spade
+        1000.times do
+          to_send << [:arm_animation, 0, true]
+          to_send << [:block_dig, 0, x, y, z, direction]
+          to_send << [:block_dig, 1, x, y, z, direction]
+          to_send << [:block_dig, 1, x, y, z, direction]
+          to_send << [:block_dig, 1, x, y, z, direction]
+          to_send << [:block_dig, 1, x, y, z, direction]
+          to_send << [:block_dig, 1, x, y, z, direction]
+        end
+        to_send << [:block_dig, 3, x, y, z, direction]
+        to_send << [:block_dig, 2, 0, 0, 0, 0]
+      # end
+
+        # while p = to_send.shift
+        #   send_packet(*p)
+        # end
+      # EM.add_timer(0.1) do
+      #   puts "done sending packets."
+      # end
+      pending_digs.concat to_send
+
+    end
+
+    def place(x, y, z, code)
+      look_at(x, y, z)
+      send_look
+      equip code
+      send_packet :place, code, x, y - 1, z, 1
+    end
+
+    def say(msg)
+      send_packet :chat, msg
+    end
+
+    def look_at(x, y, z)
+      dist = Math.sqrt((position.x.floor - x)**2 + (position.z.floor - z)**2 + 0.001)
+      position.pitch = Math.atan2(position.y - y + 1, dist).in_degrees
+      position.rotation = Math.atan2(position.z.floor - z, position.x.floor - x + 0.001).in_degrees + 90
     end
 
     protected
@@ -197,6 +262,10 @@ module Golem
 
     def pending_moves
       @pending_moves ||= []
+    end
+
+    def pending_digs
+      @pending_digs ||= []
     end
 
   end

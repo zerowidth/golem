@@ -60,9 +60,9 @@ module Golem
       state.position
     end
 
-    def move_to(x, y, z)
-      state.move_to(x, y, z)
-    end
+    # def move_to(x, y, z)
+    #   state.move_to(x, y, z)
+    # end
 
     def block_at(x, y, z)
       state.block_at(x, y, z)
@@ -78,6 +78,26 @@ module Golem
 
     def follow(flag)
       state.follow_mode = flag ? :follow : :watch
+    end
+
+    def follow_position
+      state.follow_position
+    end
+
+    def equip(code)
+      state.equip(code.to_i)
+    end
+
+    def dig(x, y, z, direction)
+      state.dig(x, y, z, direction)
+    end
+
+    def place(x, y, z, code)
+      state.place(x, y, z, code)
+    end
+
+    def say(msg)
+      state.say(msg)
     end
 
   end

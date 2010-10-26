@@ -14,7 +14,7 @@ module Golem
     def [](x, y, z)
       c = self.chunk(x, z)
       block = c && c[x, y, z]
-      raise "invalid block #{[x, y, z].inspect} is #{block}" unless block
+      puts "invalid block #{[x, y, z].inspect} is #{block}" unless block
       block
     end
 

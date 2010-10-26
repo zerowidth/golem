@@ -55,8 +55,6 @@ module Golem
         @fields ||= []
       end
 
-      protected
-
       def debug(data)
         print "-" * 52
         row = -1
@@ -72,6 +70,8 @@ module Golem
         end
         puts
       end
+
+      protected
 
       def field(name, type)
         fields << type

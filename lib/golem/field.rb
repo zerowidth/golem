@@ -114,7 +114,7 @@ module Golem
       end
 
       def encode
-        [value].pack("c")
+        [value].pack("C")
       end
     end
 

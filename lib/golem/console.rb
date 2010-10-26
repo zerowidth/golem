@@ -21,24 +21,35 @@ module Golem
       case command
       when "p", "pos", "position"
         puts "position: #{client.position.inspect}"
+        if p = client.follow_position
+          puts "following: #{p.inspect}"
+        end
       when "q", "quit", "exit"
         EM.stop
         return
 
-      when "m", "move"
-        x, y, z = args.split(" ").map(&:to_i)
+      # when "m", "move"
+      #   x, y, z = args.split(" ").map(&:to_i)
 
+      #   unless x && y
+      #     puts "usage: move <x> <y> <z> (integers)"
+      #     return
+      #   end
+
+      #   # move to center of block
+      #   if z
+      #     client.move_to x + 0.5, y, z + 0.5
+      #   else
+      #     client.move_to x + 0.5, client.position.y, y + 0.5
+      #   end
+
+      when "dig"
+        x, y, z, direction = args.split(" ").map(&:to_i)
         unless x && y
-          puts "usage: move <x> <y> <z> (integers)"
+          puts "usage: dig <x> <y> <z> (integers)"
           return
         end
-
-        # move to center of block
-        if z
-          client.move_to x + 0.5, y, z + 0.5
-        else
-          client.move_to x + 0.5, client.position.y, y + 0.5
-        end
+        client.dig(x, y, z, direction)
 
       when "b", "block"
         x, y, z = args.split(" ").map(&:to_i)
@@ -94,6 +105,29 @@ module Golem
         else
           client.debug_pattern = args
         end
+
+      when "e", "equip"
+        if !args || args.strip.empty?
+          puts "usage: equip <item code>"
+          return
+        end
+        client.equip args.strip
+
+      when "x", "place"
+        x, y, z, code = args.split(" ").map(&:to_i)
+
+        unless x && y && z && code
+          puts "usage: place <x> <y> <z> <code>"
+          return
+        end
+
+        client.place(x, y, z, code)
+
+      when "y", "say"
+        if !args.strip.empty?
+          client.say(args.strip)
+        end
+
       else
         puts "unrecognized"
       end
