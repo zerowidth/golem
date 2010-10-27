@@ -73,6 +73,15 @@ module Golem
       SOLID.include?(self[x, y, z])
     end
 
+    def tool_for(x, y, z)
+      kind = self[x, y, z]
+      if tool = TOOLS.detect {|t, l| l.include? kind }
+        tool[0]
+      else
+        0
+      end
+    end
+
     def available(x, y, z, mode = :move)
       Location.new(self).available(x, y, z, mode)
     end

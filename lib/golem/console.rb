@@ -75,8 +75,6 @@ module Golem
           puts "path x y z"
         end
 
-        puts "path from #{[p.x.floor, p.y, p.z.floor].map(&:to_i).inspect} to #{[x, y, z].inspect}:"
-
       when "b", "block"
         if args.size == 3
           x, y, z = args.map(&:to_i)
@@ -130,6 +128,14 @@ module Golem
           client.follow(player)
         else
           puts "follow <player>"
+        end
+
+      when "hole"
+        if args.size == 3
+          x, y, z = args.map(&:to_i)
+          client.hole(x, y, z)
+        else
+          puts "hole <x> <y> <z>"
         end
 
       else

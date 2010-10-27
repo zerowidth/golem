@@ -13,6 +13,7 @@ module Golem
     action
     actions/watch
     actions/follow
+    actions/hole
     field
     packet
     packets

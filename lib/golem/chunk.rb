@@ -138,6 +138,15 @@ module Golem
     :still_water
   ]
 
+  TOOLS = {
+    # shovel
+    277 => [:grass, :dirt, :sand, :gravel, :soil, :snow, :snow_block],
+    # pick
+    278 => [:stone, :cobble, :gold_ore, :iron_ore, :coal_ore, :gold_block, :iron_block, :double_step, :step, :brick, :mossy_cobble, :obsidian, :diamond_ore, :diamond_block, :cobble_stairs, :redstone_ore, :glowing_redstone_ore, :ice, :cactus],
+    # axe
+    279 => [:wood, :log, :leaves, :fence]
+  }
+
   class Chunk
 
     FULL_CHUNK = 16 * 16 * 128

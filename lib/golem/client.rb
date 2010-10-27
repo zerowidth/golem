@@ -87,21 +87,18 @@ module Golem
       send_look
 
       # TODO auto-calculate direction
+      equip map.tool_for(x, y, z)
 
       to_send = []
       to_send << [:block_dig, 0, x, y, z, direction]
+      to_send << [:arm_animation, 0, true]
 
-      500.times do
-        to_send << [:arm_animation, 0, true]
-        to_send << [:block_dig, 1, x, y, z, direction]
-        to_send << [:block_dig, 1, x, y, z, direction]
-        to_send << [:block_dig, 1, x, y, z, direction]
-        to_send << [:block_dig, 1, x, y, z, direction]
+      100.times do
         to_send << [:block_dig, 1, x, y, z, direction]
       end
 
       to_send << [:block_dig, 3, x, y, z, direction]
-      to_send << [:block_dig, 2, 0, 0, 0, 0]
+      # to_send << [:block_dig, 2, 0, 0, 0, 0]
 
       to_send.each { |packet| send_packet(*packet) }
 
@@ -137,6 +134,10 @@ module Golem
       end
 
       action Actions::Follow, player, id, pos
+    end
+
+    def hole(x, y, z)
+      action Actions::Hole, x, y, z
     end
 
     def path_to(x, y, z)
@@ -251,48 +252,6 @@ module Golem
     def debug(msg)
       log msg if debug_pattern && msg =~ debug_pattern
     end
-
-    # # delegators
-
-    # def position
-    #   state.position
-    # end
-
-    # # def move_to(x, y, z)
-    # #   state.move_to(x, y, z)
-    # # end
-
-    # def block_at(x, y, z)
-    #   state.block_at(x, y, z)
-    # end
-
-    # def adjacent
-    #   state.adjacent
-    # end
-
-    # def path_to(x, y, z)
-    #   state.path_to(x, y, z)
-    # end
-
-    # def follow(flag)
-    #   state.follow_mode = flag ? :follow : :watch
-    # end
-
-    # def follow_position
-    #   state.follow_position
-    # end
-
-    # def equip(code)
-    #   state.equip(code.to_i)
-    # end
-
-    # def dig(x, y, z, direction)
-    #   state.dig(x, y, z, direction)
-    # end
-
-    # def place(x, y, z, code)
-    #   state.place(x, y, z, code)
-    # end
 
   end
 end
