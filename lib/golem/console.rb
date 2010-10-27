@@ -17,9 +17,11 @@ module Golem
 
     def receive_data(data)
       command, args = data.strip.split(/\s+/, 2)
-      args = (args || "").split("/\s+/")
+      args = (args || "").split(/\s+/)
 
       case command
+
+      # control commands
 
       when "q", "quit", "exit"
         EM.stop
@@ -40,106 +42,95 @@ module Golem
       when "stop"
         client.stop
 
+      # simple / debugging commands
+
       when "p", "pos", "position"
         if pos = client.position
-          location = [pos.x, pos.y, pos.z].map(&:to_i)
-          puts "position: #{location.inspect} #{pos.inspect}"
+          puts "position: #{client.coords.inspect} #{pos.inspect}"
         else
           puts "no position yet?"
         end
+
+      when "m", "move"
+        if args.size == 3
+          x, y, z = args.map(&:to_i)
+          client.move_to(x, y, z)
+        else
+          puts "move x y z"
+        end
+
+      when "path"
+        if args.size == 3
+          x, y, z = args.map(&:to_i)
+
+          puts "path from #{client.coords.inspect} to #{[x, y, z].inspect}:"
+
+          if path = client.path_to(x, y, z)
+            path.each {|p| puts "  #{p.inspect}" }
+          else
+            puts "  no path found"
+          end
+
+        else
+          puts "path x y z"
+        end
+
+        puts "path from #{[p.x.floor, p.y, p.z.floor].map(&:to_i).inspect} to #{[x, y, z].inspect}:"
+
+      when "b", "block"
+        if args.size == 3
+          x, y, z = args.map(&:to_i)
+          puts "block at #{[x, y, z].inspect}: #{client.block_at(x, y, z).inspect}"
+        else
+          puts "block x y z"
+        end
+
+      when "y", "say"
+        if args.empty?
+          puts "say <message>"
+        else
+          client.say args.join(" ")
+        end
+
+      when "dig"
+        if args.size == 3 || args.size == 4
+          x, y, z, direction = args.map(&:to_i)
+          direction ||= 0
+          client.dig(x, y, z, direction)
+        else
+          puts "dig <x> <y> <z> [direction = 0]"
+        end
+
+      when "e", "equip"
+        if args.empty?
+          puts "equip <item code>"
+        else
+          client.equip args.first.to_i
+        end
+
+      when "x", "place"
+        if args.size == 4
+          x, y, z, code = args.map(&:to_i)
+          client.place x, y, z, code
+        else
+          puts "place <x> <y> <z> <code>"
+        end
+
+      # complex commands:
 
       when "watch"
         if player = args.first
           client.watch(player)
         else
-          puts "specify a player to watch"
+          puts "watch <player>"
         end
 
-      # when "m", "move"
-      #   x, y, z = args.split(" ").map(&:to_i)
-
-      #   unless x && y
-      #     puts "usage: move <x> <y> <z> (integers)"
-      #     return
-      #   end
-
-      #   # move to center of block
-      #   if z
-      #     client.move_to x + 0.5, y, z + 0.5
-      #   else
-      #     client.move_to x + 0.5, client.position.y, y + 0.5
-      #   end
-
-      # when "dig"
-      #   x, y, z, direction = args.split(" ").map(&:to_i)
-      #   unless x && y
-      #     puts "usage: dig <x> <y> <z> (integers)"
-      #     return
-      #   end
-      #   client.dig(x, y, z, direction)
-
-      # when "b", "block"
-      #   x, y, z = args.split(" ").map(&:to_i)
-      #   unless x && y && z
-      #     puts "usage: move <x> <y> <z> (integers)"
-      #     return
-      #   end
-
-      #   puts "block at #{[x, y, z].inspect}: #{client.block_at(x, y, z).inspect}"
-
-      # when "p", "path"
-      #   x, y, z = args.split(" ").map(&:to_i)
-      #   unless x && y && z
-      #     puts "usage: move <x> <y> <z> (integers)"
-      #     return
-      #   end
-      #   p = client.position
-
-      #   puts "path from #{[p.x.floor, p.y, p.z.floor].map(&:to_i).inspect} to #{[x, y, z].inspect}:"
-      #   if path = client.path_to(x, y, z)
-      #     puts "path:"
-      #     path.each {|p| puts "  #{p.inspect}" }
-      #   else
-      #     puts "no path found"
-      #   end
-
-      # when "f", "follow"
-      #   if args == "" || args == "on"
-      #     puts "following master"
-      #     client.follow true
-      #   else
-      #     puts "staying here, then."
-      #     client.follow false
-      #   end
-
-      # when "a", "adjacent"
-      #   p = client.position
-
-      #   puts "position: #{[p.x.floor, p.y, p.z.floor].inspect}"
-      #   puts "adjacent locations:"
-      #   client.adjacent.each {|a| puts "  - #{a.inspect}" }
-
-      # when "e", "equip"
-      #   if !args || args.strip.empty?
-      #     puts "usage: equip <item code>"
-      #     return
-      #   end
-      #   client.equip args.strip
-
-      # when "x", "place"
-      #   x, y, z, code = args.split(" ").map(&:to_i)
-
-      #   unless x && y && z && code
-      #     puts "usage: place <x> <y> <z> <code>"
-      #     return
-      #   end
-
-      #   client.place(x, y, z, code)
-
-      # when "y", "say"
-      #   if !args.strip.empty?
-      #     client.say(args.strip)
-      #   end
+      when "follow"
+        if player = args.first
+          client.follow(player)
+        else
+          puts "follow <player>"
+        end
 
       else
         puts "unrecognized"

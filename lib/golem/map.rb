@@ -80,6 +80,7 @@ module Golem
     # A* algorithm adapted from http://rubyquiz.com/quiz98.html
     # with hints from http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
     def path(start, goals)
+      start = start.map(&:to_i)
       goals = goals.flatten.size == 3 ? [goals.flatten] : goals
 
       location = Location.new(self)
@@ -112,7 +113,7 @@ module Golem
         if goals.include? point.point
           final_path = point.path + [point.point]
           final_path.shift # don't need the start point, we're already there
-          puts "examined #{examined} paths"
+          # puts "examined #{examined} paths"
           return final_path
         end
 

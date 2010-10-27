@@ -12,6 +12,7 @@ module Golem
     client
     action
     actions/watch
+    actions/follow
     field
     packet
     packets

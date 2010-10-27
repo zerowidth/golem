@@ -45,6 +45,10 @@ module Golem
       log "invalid regex: #{e.message}: #{pattern.inspect}"
     end
 
+    def coords
+      [position.x, position.y, position.z].map(&:floor).map(&:to_i)
+    end
+
     def look_at(x, y, z)
       dist = Math.sqrt((position.x.floor - x)**2 + (position.z.floor - z)**2 + 0.001)
       position.pitch = Math.atan2(position.y - y + 1, dist).in_degrees
@@ -70,6 +74,51 @@ module Golem
       @current_action = nil
     end
 
+    def say(msg)
+      send_packet :chat, msg
+    end
+
+    def equip(code)
+      send_packet :block_item_switch, 0, code
+    end
+
+    def dig(x, y, z, direction)
+      look_at(x, y, z)
+      send_look
+
+      # TODO auto-calculate direction
+
+      to_send = []
+      to_send << [:block_dig, 0, x, y, z, direction]
+
+      500.times do
+        to_send << [:arm_animation, 0, true]
+        to_send << [:block_dig, 1, x, y, z, direction]
+        to_send << [:block_dig, 1, x, y, z, direction]
+        to_send << [:block_dig, 1, x, y, z, direction]
+        to_send << [:block_dig, 1, x, y, z, direction]
+        to_send << [:block_dig, 1, x, y, z, direction]
+      end
+
+      to_send << [:block_dig, 3, x, y, z, direction]
+      to_send << [:block_dig, 2, 0, 0, 0, 0]
+
+      to_send.each { |packet| send_packet(*packet) }
+
+    end
+
+    def place(x, y, z, code)
+      look_at(x, y, z)
+      send_look
+
+      equip code
+      send_packet :place, code, x, y - 1, z, 1
+    end
+
+    def block_at(x, y, z)
+      map[x, y, z]
+    end
+
     def watch(player)
       id = pos = nil
       if entity = entities.detect { |i, e| e.name == player }
@@ -78,6 +127,30 @@ module Golem
       end
 
       action Actions::Watch, player, id, pos
+    end
+
+    def follow(player)
+      id = pos = nil
+      if entity = entities.detect { |i, e| e.name == player }
+        id, entity = *entity
+        pos = entity.position
+      end
+
+      action Actions::Follow, player, id, pos
+    end
+
+    def path_to(x, y, z)
+      map.path(coords, [x, y, z].map(&:floor).map(&:to_i))
+    end
+
+    def move_to(x, y, z)
+      # debug "moving to #{x} #{y} #{z}"
+      position.x = x + 0.5
+      position.y = y
+      position.z = z + 0.5
+      position.stance = y + STANCE
+      position.flying = map.solid?(x, y - 1, z)
+      send_move_look
     end
 
     def log(msg)
@@ -114,6 +187,9 @@ module Golem
 
       when :disconnect
         EM.stop
+
+      when :chat
+        log packet.message
 
       when :player_move_look
         x, stance, y, z, rotation, pitch, flying = packet.values
@@ -216,10 +292,6 @@ module Golem
 
     # def place(x, y, z, code)
     #   state.place(x, y, z, code)
-    # end
-
-    # def say(msg)
-    #   state.say(msg)
     # end
 
   end
