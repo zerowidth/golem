@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+$:.unshift(File.expand_path(File.dirname(__FILE__) + "/../lib"))
+
+require "golem"
+
+if ARGV.include?("-h") || ARGV.include?("--help")
+  abort "golem [host=localhost [port=25565]]"
+end
+
+host = ARGV.shift || "127.0.0.1"
+port = (ARGV.shift || 25565).to_i
+
+Golem::Session.start(host, port)
+

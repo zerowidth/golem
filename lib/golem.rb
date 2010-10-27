@@ -6,10 +6,20 @@ module Golem
   Error = Class.new(StandardError)
   IncompletePacket = Class.new(Error)
 
-  %w(session console client state
-    field packet packets parser
-     interceptor proxy
-     chunk map
+  %w(
+    session
+    console
+    client
+    action
+    actions/watch
+    field
+    packet
+    packets
+    parser
+    interceptor
+    proxy
+    chunk
+    map
   ).each do |lib|
     require "golem/#{lib}"
   end

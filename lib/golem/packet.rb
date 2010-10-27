@@ -1,6 +1,5 @@
 module Golem
 
-
   class Packet
 
     class << self

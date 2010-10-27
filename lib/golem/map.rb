@@ -45,7 +45,7 @@ module Golem
         # end
         @chunks[chunk.x / 16][chunk.z / 16] = chunk
       else
-        puts "incremental: #{[chunk.x, chunk.y, chunk.z].inspect} #{[chunk.size_x, chunk.size_y, chunk.size_z].inspect}"
+        # puts "incremental: #{[chunk.x, chunk.y, chunk.z].inspect} #{[chunk.size_x, chunk.size_y, chunk.size_z].inspect}"
         chunk.each_column do |x, y, z, data|
           # puts "updating #{[x,y,z].inspect} #{data.size} blocks"
           update(x, y, z, data)
