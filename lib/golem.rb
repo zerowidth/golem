@@ -1,7 +1,11 @@
 module Golem
 
-  require "eventmachine"
+  require "yaml"
   require "zlib"
+  require "pathname"
+
+  require "eventmachine"
+  require "chunky_png"
 
   Error = Class.new(StandardError)
   IncompletePacket = Class.new(Error)
@@ -22,8 +26,13 @@ module Golem
     proxy
     chunk
     map
+    blueprint
   ).each do |lib|
     require "golem/#{lib}"
+  end
+
+  def self.blueprint_path
+    @blueprint_path ||= Pathname.new(File.expand_path(File.dirname(__FILE__) + "/../blueprints"))
   end
 
   class ::Numeric
