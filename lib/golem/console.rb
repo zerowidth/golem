@@ -129,13 +129,29 @@ module Golem
           puts "follow <player>"
         end
 
-      # when "hole"
-      #   if args.size == 3
-      #     x, y, z = args.map(&:to_i)
-      #     client.hole(x, y, z)
-      #   else
-      #     puts "hole <x> <y> <z>"
-      #   end
+      when "loadout"
+        # tell the server that we have all the tools, and we're full of dirt too so we can't
+        # pick anything else up.
+
+        client.send_packet :player_inventory, [-3, [nil, nil, nil, nil]]
+        client.send_packet :player_inventory, [-2, [nil, nil, nil, nil]]
+        client.send_packet :player_inventory, [-1, [
+          # main inventory slots:
+          [276, 1, 1], # sword
+          [277, 1, 1], # spade
+          [278, 1, 1], # pickaxe
+          [279, 1, 1], # axe
+          [3, 64, 0],
+          [3, 64, 0],
+          [3, 64, 0],
+          [3, 64, 0],
+          [345, 1, 0], # compass
+
+          # full of dirt!
+          [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0],
+          [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0],
+          [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0],
+        ]]
 
       when "survey"
         if blueprint = args.first

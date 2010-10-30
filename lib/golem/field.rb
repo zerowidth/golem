@@ -121,24 +121,42 @@ module Golem
     class PlayerInventory < Base
       def parse(data)
         type, supposed_count, data = consume data, "Nn"
+        type = type & 0x40000000 > 0 ? -((type ^ 0xFFFFFFFF) & 0x7FFFFFFF) - 1 : type
         count = case type
-        when 0xFFFFFFFF # -1
+        when -1
           36
-        else
+        when -2, -3
           4
+        else
+          raise "unknown inventory type"
         end
 
+        slots = Array.new(count)
         count.times do |n|
           item_id, data = consume data, "n"
           # item_id = item_id & 0x4000 > 0 ? -((item_id ^ 0xFFFF) & 0x7FFF) - 1 : item_id
           # puts "    slot #{n} item id #{item_id}"
           unless item_id == 0xFFFF
             item_count, item_health, data = consume data, "cn"
+            slots[n] = [item_id, item_count, item_health]
           end
         end
 
         # puts "done with inventory"
-        [supposed_count, data]
+        [type, slots, data]
+      end
+
+      def encode
+        type, slots = value
+        slots = slots.map do |slot|
+          if slot
+            item_id, count, health = slot
+            [item_id, count, health].pack "ncn"
+          else
+            [-1].pack("n")
+          end
+        end
+        [type, slots.size].pack("Nn") << slots.join("")
       end
     end
 
