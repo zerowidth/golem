@@ -7,6 +7,10 @@ module Golem
       @client, @map = client, map
     end
 
+    # for setting up the command
+    def setup(*args)
+    end
+
     # called any time the client receives a packet
     def update(packet)
     end

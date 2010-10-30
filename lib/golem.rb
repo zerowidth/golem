@@ -18,6 +18,7 @@ module Golem
     actions/watch
     actions/follow
     actions/hole
+    actions/survey
     field
     packet
     packets

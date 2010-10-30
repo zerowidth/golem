@@ -136,6 +136,10 @@ module Golem
       action Actions::Follow, player, id, pos
     end
 
+    def survey(blueprint)
+      action Actions::Survey, blueprint, coords
+    end
+
     def hole(x, y, z)
       action Actions::Hole, x, y, z
     end

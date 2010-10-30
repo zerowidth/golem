@@ -20,9 +20,17 @@ require "spec_helper"
 #       +x
 
 describe Golem::Blueprint do
+
+  describe "with a blueprint name sans .yml extension" do
+    it "finds the yml file" do
+      bp =  Golem::Blueprint.new("test", [0, 0, 0])
+      bp.size.should == [3, 2, 5]
+    end
+  end
+
   context "with a test blueprint at 10, 20, 30" do
     before :each do
-      @bp = Golem::Blueprint.new("test.yml", 10, 20, 30)
+      @bp = Golem::Blueprint.new("test.yml", [10, 20, 30])
     end
 
     describe "#size" do
@@ -37,16 +45,16 @@ describe Golem::Blueprint do
       end
     end
 
-    describe "#relative(x,y,z)" do
+    describe "#local(x,y,z)" do
       it "returns block data using 0-originated map coords" do
-        @bp.relative(0, 0, 0).should == :air
-        @bp.relative(0, 1, 0).should == :stone
+        @bp.local(0, 0, 0).should == :air
+        @bp.local(0, 1, 0).should == :stone
 
-        @bp.relative(1, 0, 4).should == :air
-        @bp.relative(1, 1, 4).should == :air
+        @bp.local(1, 0, 4).should == :air
+        @bp.local(1, 1, 4).should == :air
 
-        @bp.relative(2, 0, 4).should == :stone
-        @bp.relative(2, 1, 4).should == :air
+        @bp.local(2, 0, 4).should == :stone
+        @bp.local(2, 1, 4).should == :air
       end
     end
 

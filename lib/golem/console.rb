@@ -130,12 +130,19 @@ module Golem
           puts "follow <player>"
         end
 
-      when "hole"
-        if args.size == 3
-          x, y, z = args.map(&:to_i)
-          client.hole(x, y, z)
+      # when "hole"
+      #   if args.size == 3
+      #     x, y, z = args.map(&:to_i)
+      #     client.hole(x, y, z)
+      #   else
+      #     puts "hole <x> <y> <z>"
+      #   end
+
+      when "survey"
+        if blueprint = args.first
+          client.survey(blueprint)
         else
-          puts "hole <x> <y> <z>"
+          puts "survey <blueprint>"
         end
 
       else

@@ -5,14 +5,17 @@ module Golem
     attr_reader :size # in map coords
     attr_reader :block_data
     attr_reader :offset, :center
-    # attr_reader :size_x, :size_y, :size_z
 
-    def initialize(blueprint_file, x, y, z)
+    def initialize(blueprint_file, center)
+      blueprint_file += ".yml" unless blueprint_file =~ /\.yml$/
+
       @plans = YAML.load(File.read( Golem.blueprint_path + blueprint_file) )
 
       start_x, start_y, start_z = plans["start"]
+
+      @center = center
+      x, y, z = center
       @offset = [x - start_y, y - start_z, z - start_x]
-      @center = [x, y, z]
 
       size_x, size_y, size_z = plans["size"]
       @size = [size_y, size_z, size_x] # map absolute
@@ -20,7 +23,7 @@ module Golem
       load_blocks_from_layers(plans["layers"], plans["size"])
     end
 
-    def relative(x, y, z)
+    def local(x, y, z)
       block_data[ x * size[1] * size[2] + y + z * size[1] ]
     end
 
@@ -30,7 +33,29 @@ module Golem
       local_y = y - offset[1]
       local_z = z - offset[2]
       # puts "#{[x,y,z].inspect} --> #{[local_x, local_y, local_z].inspect}"
-      relative(local_x, local_y, local_z)
+      local(local_x, local_y, local_z)
+    end
+
+    # returns a histogram of the blocks that need to be changed
+    #
+    # NOTE this is assuming 100% removal for now
+    #
+    def survey(map)
+      changes = []
+      o_x, o_y, o_z = offset
+      0.upto(size[1] - 1) do |y|
+        0.upto(size[0] - 1) do |x|
+          0.upto(size[2] - 1) do |z|
+            if needs_to_be = local(x, y, z)
+              current = map[x + o_x, y + o_y, z + o_z]
+              if map.solid?(x + o_x, y + o_y, z + o_z) && current != needs_to_be
+                changes << [[x + o_x, y + o_y, z + o_z], current, needs_to_be]
+              end
+            end
+          end
+        end
+      end
+      changes
     end
 
     protected
