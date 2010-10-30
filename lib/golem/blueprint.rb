@@ -58,6 +58,24 @@ module Golem
       changes
     end
 
+    def survey_coords(map)
+      changes = {}
+      o_x, o_y, o_z = offset
+      0.upto(size[1] - 1) do |y|
+        0.upto(size[0] - 1) do |x|
+          0.upto(size[2] - 1) do |z|
+            if needs_to_be = local(x, y, z)
+              current = map[x + o_x, y + o_y, z + o_z]
+              if map.solid?(x + o_x, y + o_y, z + o_z) && current != needs_to_be
+                changes[[x + o_x, y + o_y, z + o_z]] = [current, needs_to_be]
+              end
+            end
+          end
+        end
+      end
+      changes
+    end
+
     protected
 
     def load_blocks_from_layers(layers, image_size)

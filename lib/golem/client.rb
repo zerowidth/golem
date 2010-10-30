@@ -157,6 +157,10 @@ module Golem
       action Actions::Survey, blueprint, coords
     end
 
+    def build(blueprint)
+      action Actions::Build, blueprint, coords
+    end
+
     def hole(x, y, z)
       action Actions::Hole, x, y, z
     end

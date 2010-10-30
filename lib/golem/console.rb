@@ -160,6 +160,13 @@ module Golem
           puts "survey <blueprint>"
         end
 
+      when "build"
+        if blueprint = args.first
+          client.build(blueprint)
+        else
+          puts "build <blueprint>"
+        end
+
       else
         puts "unrecognized"
       end

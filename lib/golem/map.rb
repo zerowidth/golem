@@ -1,7 +1,7 @@
 module Golem
   class Map
 
-    MAX_PATH_SIZE = 32
+    MAX_PATH_SIZE = 130 # bottom to top of chunk, plus a few
 
     def initialize
       @chunks = {}
@@ -88,16 +88,17 @@ module Golem
 
     # A* algorithm adapted from http://rubyquiz.com/quiz98.html
     # with hints from http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-    def path(start, goals)
+    def path(start, goals, mode = :move_to)
       start = start.map(&:to_i)
       goals = goals.flatten.size == 3 ? [goals.flatten] : goals
 
       location = Location.new(self)
+
       if goals.reject { |goal| (start[0] - goal[0]).abs + (start[1] - goal[1]).abs + (start[2] - goal[2]).abs > MAX_PATH_SIZE }.empty?
         puts "target too far away"
         return nil
-      elsif goals.select { |g| location.allowed?(*g) }.empty?
-        puts "can't follow, nowhere to go"
+      elsif mode == :move_to && goals.select { |g| location.allowed?(*g) }.empty?
+        puts "can't go there..."
         return nil
       end
       visited = {}
@@ -119,11 +120,25 @@ module Golem
 
         examined += 1
 
-        if goals.include? point.point
-          final_path = point.path + [point.point]
-          final_path.shift # don't need the start point, we're already there
-          # puts "examined #{examined} paths"
-          return final_path
+        case mode
+        when :move_to
+          if goals.include?(point.point)
+            final_path = point.path + [point.point]
+            final_path.shift # don't need the start point, we're already there
+            # puts "examined #{examined} paths"
+            return final_path
+          end
+
+        when :next_to
+          available_for_building = location.available(*point.point, :build)
+          if available_for_building.any? { |a| goals.include? a }
+            final_path = point.path + [point.point]
+            final_path.shift # don't need the start point, we're already there
+            # puts "examined #{examined} paths"
+            return final_path
+          end
+        else
+          raise "unknown pathfinding mode: #{mode.inspect}"
         end
 
         next_available = location.available(*point.point).each do |test|
@@ -186,6 +201,12 @@ module Golem
       case mode
       when :move # all movements allowed
         transforms = [[NORTH], [EAST], [SOUTH], [WEST], [DOWN], [UP]]
+      when :build
+        transforms = [
+          [UP], [DOWN],
+          [NORTH], [EAST], [SOUTH], [WEST],
+          [NORTH, UP], [EAST, UP], [WEST, UP], [SOUTH, UP]
+        ]
       when :follow # following someone, don't get up in their business
         transforms = [
           [NORTH], [EAST], [SOUTH], [WEST],
@@ -198,7 +219,11 @@ module Golem
       transforms.map do |transform|
         test = pos
         transform.each {|xform| test = combine(test, xform) }
-        list << test if allowed?(*test, allow_flight)
+        if mode == :build
+          list << test
+        else
+          list << test if allowed?(*test, allow_flight)
+        end
       end
 
       list
