@@ -190,7 +190,8 @@ module Golem
       case packet.class.kind
 
       when :server_handshake
-        send_packet :login, 2, "golem", "password"
+        send_packet :login, 3, "golem", "Password"
+        9.times { send_packet :keepalive }
 
         # keepalive
         EM.add_periodic_timer(0.5) { send_packet :flying_ack, position.flying if position.x }

@@ -308,6 +308,17 @@ module Golem
       field :payload, Field::EntityPayload
     end
 
+    server_packet :unknown, 0x67 do
+      byte :a
+      byte :b
+      byte :c
+      byte :d
+      byte :e
+      byte :f
+      byte :g
+      byte :h
+    end
+
     client_packet :disconnect, 0xff do
       string :message
     end
