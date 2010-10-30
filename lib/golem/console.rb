@@ -91,12 +91,11 @@ module Golem
         end
 
       when "dig"
-        if args.size == 3 || args.size == 4
-          x, y, z, direction = args.map(&:to_i)
-          direction ||= 0
-          client.dig(x, y, z, direction)
+        if args.size == 3
+          x, y, z = args.map(&:to_i)
+          client.dig(x, y, z)
         else
-          puts "dig <x> <y> <z> [direction = 0]"
+          puts "dig <x> <y> <z>"
         end
 
       when "e", "equip"

@@ -51,7 +51,9 @@ module Golem
 
     def look_at(x, y, z)
       dist = Math.sqrt((position.x.floor - x)**2 + (position.z.floor - z)**2 + 0.001)
-      position.pitch = Math.atan2(position.y - y + 1, dist).in_degrees
+
+      # always look downward a bit, so digging blocks next to the feet work.
+      position.pitch = Math.atan2(position.y - y + STANCE, dist).in_degrees
       position.rotation = Math.atan2(position.z.floor - z, position.x.floor - x + 0.001).in_degrees + 90
     end
 
@@ -82,22 +84,37 @@ module Golem
       send_packet :block_item_switch, 0, code
     end
 
-    def dig(x, y, z, direction)
+    def dig(x, y, z)
       look_at(x, y, z)
       send_look
 
-      # TODO auto-calculate direction
       equip map.tool_for(x, y, z)
 
+      # favor x, z directionality over y, since
+      # digging to the side could mean y + 1 or y + 0
+      if coords[0] < x
+        face = 4
+      elsif coords[0] > x
+        face = 5
+      elsif coords[2] < z
+        face = 2
+      elsif coords[2] > z
+        face = 3
+      elsif coords[1] < y
+        face = 0
+      elsif coords[1] > y
+        face = 1
+      end
+
       to_send = []
-      to_send << [:block_dig, 0, x, y, z, direction]
+      to_send << [:block_dig, 0, x, y, z, face]
       to_send << [:arm_animation, 0, true]
 
       100.times do
-        to_send << [:block_dig, 1, x, y, z, direction]
+        to_send << [:block_dig, 1, x, y, z, face]
       end
 
-      to_send << [:block_dig, 3, x, y, z, direction]
+      to_send << [:block_dig, 3, x, y, z, face]
       # to_send << [:block_dig, 2, 0, 0, 0, 0]
 
       to_send.each { |packet| send_packet(*packet) }
