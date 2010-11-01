@@ -161,8 +161,16 @@ module Golem
         end
 
       when "build"
-        if blueprint = args.first
+        if blueprint = args.shift
           client.build(blueprint)
+
+          if args.size == 3
+            x, y, z = args.map(&:to_i)
+            client.build(blueprint, [x, y, z])
+          elsif !args.empty?
+            puts "build <blueprint> [x y z]"
+          end
+
         else
           puts "build <blueprint>"
         end

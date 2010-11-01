@@ -230,9 +230,15 @@ module Golem
         transforms = [[NORTH], [EAST], [SOUTH], [WEST], [DOWN], [UP]]
       when :build
         transforms = [
-          [UP], [DOWN],
+          [UP, UP], [DOWN], # two up's so it's overhead
           [NORTH], [EAST], [SOUTH], [WEST],
-          [NORTH, UP], [EAST, UP], [WEST, UP], [SOUTH, UP]
+          [NORTH, UP], [EAST, UP], [WEST, UP], [SOUTH, UP]#,
+          # [NORTH, EAST], [NORTH, WEST], [SOUTH, EAST], [SOUTH, WEST],
+          # [NORTH, EAST, UP], [NORTH, WEST, UP], [SOUTH, EAST, UP], [SOUTH, WEST, UP],
+          # [NORTH, EAST, DOWN], [NORTH, WEST, DOWN],
+          # [SOUTH, EAST, DOWN], [SOUTH, WEST, DOWN],
+          # [NORTH, EAST, UP, UP], [NORTH, WEST, UP, UP],
+          # [SOUTH, EAST, UP, UP], [SOUTH, WEST, UP, UP],
         ]
       when :follow # following someone, don't get up in their business
         transforms = [
