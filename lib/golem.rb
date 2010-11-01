@@ -29,12 +29,17 @@ module Golem
     chunk
     map
     blueprint
+    nbt_parser
   ).each do |lib|
     require "golem/#{lib}"
   end
 
+  def self.path
+    @path ||= Pathname.new(File.expand_path(File.dirname(__FILE__) + "/.."))
+  end
+
   def self.blueprint_path
-    @blueprint_path ||= Pathname.new(File.expand_path(File.dirname(__FILE__) + "/../blueprints"))
+    @blueprint_path ||= path + "blueprints"
   end
 
   class ::Numeric

@@ -58,13 +58,13 @@ module Golem
         print "-" * 52
         row = -1
         column = 16
-        data.each_char do |char|
+        data.each_byte do |byte|
           if column == 16
             row += 1
             column = 0
             print "\n%04x" % row
           end
-          print " %02x" % char.ord
+          print " %02x" % byte
           column += 1
         end
         puts
