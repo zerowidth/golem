@@ -48,7 +48,8 @@ module Golem
           0.upto(size[2] - 1) do |z|
             if needs_to_be = local(x, y, z)
               current = map[x + o_x, y + o_y, z + o_z]
-              if map.solid?(x + o_x, y + o_y, z + o_z) && current != needs_to_be
+              if current != needs_to_be
+              # if map.solid?(x + o_x, y + o_y, z + o_z) && current != needs_to_be
                 changes << [[x + o_x, y + o_y, z + o_z], current, needs_to_be]
               end
             end
@@ -58,15 +59,28 @@ module Golem
       changes
     end
 
-    def survey_coords(map)
+    def survey_coords(map, center=nil)
       changes = {}
+
       o_x, o_y, o_z = offset
-      0.upto(size[1] - 1) do |y|
-        0.upto(size[0] - 1) do |x|
-          0.upto(size[2] - 1) do |z|
+
+      x = [0, size[0] - 1]
+      y = [0, size[1] - 1]
+      z = [0, size[2] - 1]
+
+      if center
+        cx, cy, cz = center
+        x = subrange(x, [cx - o_x - 5, cx - o_x + 5])
+        y = subrange(y, [cy - o_y - 5, cy - o_y + 5])
+        z = subrange(z, [cz - o_z - 5, cz - o_z + 5])
+      end
+
+      y[0].upto(y[1]) do |y|
+        x[0].upto(x[1]) do |x|
+          z[0].upto(z[1]) do |z|
             if needs_to_be = local(x, y, z)
               current = map[x + o_x, y + o_y, z + o_z]
-              if map.solid?(x + o_x, y + o_y, z + o_z) && current != needs_to_be
+              if current != needs_to_be
                 changes[[x + o_x, y + o_y, z + o_z]] = [current, needs_to_be]
               end
             end
@@ -77,6 +91,26 @@ module Golem
     end
 
     protected
+
+    def subrange(initial, constraint)
+      i_start, i_end = initial
+      c_start, c_end = constraint
+
+      range = []
+      if c_start < 0
+        range << 0
+      else
+        range << [i_start, c_start].max
+      end
+
+      if c_end > i_end
+        range << i_end
+      else
+        range << [i_end, c_end].min
+      end
+
+      range
+    end
 
     def load_blocks_from_layers(layers, image_size)
       files = layers.uniq.sort

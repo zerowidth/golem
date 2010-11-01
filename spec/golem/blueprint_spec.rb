@@ -88,6 +88,8 @@ describe Golem::Blueprint do
         # center is 10, 20, 30
         # starting offset inside the image (map coords) is 1, 0, 2
         # center - internal offset
+        # but takes into account the width of the image, too, since
+        # the z axis is reversed and the start point is in image coords.
         @bp.offset.should == [9, 20, 28]
       end
     end
