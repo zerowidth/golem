@@ -31,6 +31,8 @@ module Golem
       int :player_id
       string :unused_1
       string :unused_2
+      long :map_seed
+      byte :dimension
     end
 
     client_packet :handshake, 0x02 do
@@ -306,17 +308,6 @@ module Golem
       short :y
       int :z
       field :payload, Field::EntityPayload
-    end
-
-    server_packet :unknown, 0x67 do
-      byte :a
-      byte :b
-      byte :c
-      byte :d
-      byte :e
-      byte :f
-      byte :g
-      byte :h
     end
 
     client_packet :disconnect, 0xff do
