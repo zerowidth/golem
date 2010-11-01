@@ -15,10 +15,10 @@ module Golem
 
       @center = center
       x, y, z = center
-      @offset = [x - start_y, y - start_z, z - start_x]
-
       size_x, size_y, size_z = plans["size"]
+
       @size = [size_y, size_z, size_x] # map absolute
+      @offset = [x - start_y, y - start_z, z - (size_x - 1 - start_x)]
 
       load_blocks_from_layers(plans["layers"], plans["size"])
     end
