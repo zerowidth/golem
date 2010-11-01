@@ -1,0 +1,22 @@
+---
+name: d17
+size: [17, 17, 17]
+start: [8, 8, 8]
+layers:
+  - d17_5.png
+  - d17_4.png
+  - d17_3.png
+  - d17_2.png
+  - d17_1.png
+  - d17_1.png
+  - d17_0.png
+  - d17_0.png
+  - d17_0.png
+  - d17_0.png
+  - d17_0.png
+  - d17_1.png
+  - d17_1.png
+  - d17_2.png
+  - d17_3.png
+  - d17_4.png
+  - d17_5.png
