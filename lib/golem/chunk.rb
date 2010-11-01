@@ -71,7 +71,13 @@ module Golem
     82 => :clay,
     83 => :reed,
     84 => :jukebox,
-    85 => :fence
+    85 => :fence,
+    86 => :pumpkin,
+    87 => :bloodstone,
+    88 => :slow_sand,
+    89 => :lightstone,
+    90 => :portal,
+    91 => :jack_o_lantern
   }
 
   SOLID = [
@@ -130,7 +136,10 @@ module Golem
     :clay,
     :jukebox,
     # special case:
-    :fence
+    :fence,
+    :bloodstone,
+    :slow_sand,
+    :lightstone,
   ]
 
   WATER = [
@@ -140,9 +149,9 @@ module Golem
 
   TOOLS = {
     # shovel
-    277 => [:grass, :dirt, :sand, :gravel, :soil, :snow, :snow_block],
+    277 => [:grass, :dirt, :sand, :gravel, :soil, :snow, :snow_block, :slow_sand],
     # pick
-    278 => [:stone, :cobble, :gold_ore, :iron_ore, :coal_ore, :gold_block, :iron_block, :double_step, :step, :brick, :mossy_cobble, :obsidian, :diamond_ore, :diamond_block, :cobble_stairs, :redstone_ore, :glowing_redstone_ore, :ice, :cactus],
+    278 => [:stone, :cobble, :gold_ore, :iron_ore, :coal_ore, :gold_block, :iron_block, :double_step, :step, :brick, :mossy_cobble, :obsidian, :diamond_ore, :diamond_block, :cobble_stairs, :redstone_ore, :glowing_redstone_ore, :ice, :cactus, :bloodstone, :lightstone],
     # axe
     279 => [:wood, :log, :leaves, :fence]
   }
@@ -153,7 +162,6 @@ module Golem
 
     attr_reader :x, :y, :z
     attr_reader :size_x, :size_y, :size_z
-    attr_reader :blocks
 
     def initialize(x, y, z, size_x, size_y, size_z, data)
       # sizes are raw from packet, so add 1
@@ -161,13 +169,7 @@ module Golem
       @size_x, @size_y, @size_z = size_x + 1, size_y + 1, size_z + 1
 
       if data
-        @blocks = []
-        data = Zlib::Inflate.inflate(data)
-        size = @size_x * @size_y * @size_z
-        *block_types = data[0...size].unpack("c#{size}")
-        block_types.each do |code|
-          blocks << BLOCKS[code]
-        end
+        @data = data
       else
         @blocks = Array.new(@size_x * @size_y * @size_z) { :air }
       end
@@ -196,7 +198,7 @@ module Golem
       y = y - self.y
       z = z - self.z
       offset = (x * size_z * size_y) + (z * size_y) + y
-      blocks[offset..(offset+data.size)] = data
+      blocks[offset...(offset+data.size)] = data
     end
 
     # access using chunk-localized coords, x=0..15, y=0..127, z=0..15
@@ -228,6 +230,20 @@ module Golem
         end
       end
       found
+    end
+
+    protected
+
+    def blocks
+      return @blocks if @blocks
+      @blocks = []
+      data = Zlib::Inflate.inflate(@data)
+      size = @size_x * @size_y * @size_z
+      *block_types = data[0...size].unpack("c#{size}")
+      block_types.each do |code|
+        @blocks << BLOCKS[code]
+      end
+      @blocks
     end
 
   end

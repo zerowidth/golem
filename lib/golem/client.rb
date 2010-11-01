@@ -157,8 +157,10 @@ module Golem
       action Actions::Survey, blueprint, coords
     end
 
-    def build(blueprint)
-      action Actions::Build, blueprint, coords
+    def build(blueprint, center = nil)
+      where = center || coords
+      puts "building #{blueprint} at #{where.inspect}"
+      action Actions::Build, blueprint, where
     end
 
     def hole(x, y, z)
