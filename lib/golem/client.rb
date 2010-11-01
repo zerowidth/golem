@@ -252,7 +252,7 @@ module Golem
 
       when :pre_chunk
         if packet.add
-          map.preinitialize(packet.x, packet.z)
+          # map.preinitialize(packet.x, packet.z)
         else
           map.drop(packet.x, packet.z)
         end

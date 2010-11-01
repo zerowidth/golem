@@ -5,6 +5,8 @@ module Golem
 
     def initialize
       @chunks = {}
+      @pending_changes = {}
+      @pending_updates = {}
     end
 
     def chunk(x, z)
@@ -14,7 +16,7 @@ module Golem
     def [](x, y, z)
       c = self.chunk(x, z)
       block = c && c[x, y, z]
-      puts "invalid block #{[x, y, z].inspect} is #{block}" unless block
+      puts "invalid block #{[x, y, z].inspect} is #{block.inspect}" unless block
       block
     end
 
@@ -25,7 +27,9 @@ module Golem
       elsif c
         puts "got chunk but not offset: #{[x,y,z].inspect}"
       else
-        puts "couldn't find chunk to assign block to: #{[x,y,z].inspect} #{type.inspect}"
+        puts "storing assignment #{[x, y, z].inspect} #{type.inspect}"
+        (@pending_changes[[x/16, z/16]] ||= []) << [x, y, z, type]
+        # puts "couldn't find chunk to assign block to: #{[x,y,z].inspect} #{type.inspect}"
       end
     end
 
@@ -44,6 +48,25 @@ module Golem
         #   puts "adding   : #{[chunk.x, chunk.z].inspect}"
         # end
         @chunks[chunk.x / 16][chunk.z / 16] = chunk
+
+        key = [chunk.x/16, chunk.z/16]
+
+        if @pending_changes[key]
+          @pending_changes[key].each do |x, y, z, block|
+            puts "applying stored change #{[x, y, z].inspect} #{block}"
+            self[x, y, z] = block
+          end
+          @pending_changes.delete key
+        end
+
+        if @pending_updates[key]
+          @pending_updates[key].each do |x, y, z, data|
+            puts "applying stored update #{[x,y,z].inspect} #{data}"
+            update(x, y, z, data)
+            @pending_updates.delete key
+          end
+        end
+
       else
         # puts "incremental: #{[chunk.x, chunk.y, chunk.z].inspect} #{[chunk.size_x, chunk.size_y, chunk.size_z].inspect}"
         chunk.each_column do |x, y, z, data|
@@ -56,7 +79,11 @@ module Golem
     # update a section of data incrementally
     def update(x, y, z, data)
       if c = chunk(x, z)
+        puts "updating #{[x,y,z].inspect} with #{data.inspect}"
         c.update(x, y, z, data)
+      else
+        puts "storing update #{[x, y, z].inspect} #{data.inspect}"
+        (@pending_updates[[x/16, z/16]] ||= []) << [x, y, z, data]
       end
     end
 
