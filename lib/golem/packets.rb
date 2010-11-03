@@ -274,6 +274,9 @@ module Golem
       byte :size_y
       byte :size_z
       field :chunk, Field::MapChunk
+      def inspect
+        "<0x33 map chunk: [#{size_x + 1}, #{size_y + 1}, #{size_x + 1}]>"
+      end
     end
 
     server_packet :multi_block_change, 0x34 do

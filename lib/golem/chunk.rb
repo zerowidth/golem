@@ -188,7 +188,7 @@ module Golem
       (0...size_x).each do |x|
         (0...size_z).each do |z|
           offset = (x * size_z * size_y) + (z * size_y)
-          yield x + self.x, self.y, z + self.z, blocks[offset..(offset + size_y)]
+          yield x + self.x, self.y, z + self.z, blocks[offset...(offset + size_y)]
         end
       end
     end

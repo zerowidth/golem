@@ -165,6 +165,11 @@ module Golem
         chunk_size, data = consume data, "N"
         if data.size >= chunk_size
           chunk_data = data[0...chunk_size]
+          class << chunk_data
+            def inspect
+              "chunk data - #{size} bytes"
+            end
+          end
           data = data[chunk_size..-1]
         else
           raise IncompletePacket

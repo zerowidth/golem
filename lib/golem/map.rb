@@ -27,13 +27,14 @@ module Golem
       elsif c
         puts "got chunk but not offset: #{[x,y,z].inspect}"
       else
-        puts "storing assignment #{[x, y, z].inspect} #{type.inspect}"
+        # puts "storing assignment #{[x, y, z].inspect} #{type.inspect}"
         (@pending_changes[[x/16, z/16]] ||= []) << [x, y, z, type]
         # puts "couldn't find chunk to assign block to: #{[x,y,z].inspect} #{type.inspect}"
       end
     end
 
-    def preinitialize(x, z)
+    # generate an empty chunk
+    def empty(x, z)
       @chunks[x] ||= {}
       @chunks[x][z] = Chunk.new(x * 16, 0, z * 16, 15, 127, 15, nil)
     end
@@ -53,7 +54,7 @@ module Golem
 
         if @pending_changes[key]
           @pending_changes[key].each do |x, y, z, block|
-            puts "applying stored change #{[x, y, z].inspect} #{block}"
+            # puts "applying stored change #{[x, y, z].inspect} #{block}"
             self[x, y, z] = block
           end
           @pending_changes.delete key
@@ -61,7 +62,7 @@ module Golem
 
         if @pending_updates[key]
           @pending_updates[key].each do |x, y, z, data|
-            puts "applying stored update #{[x,y,z].inspect} #{data}"
+            # puts "applying stored update #{[x,y,z].inspect} #{data}"
             update(x, y, z, data)
             @pending_updates.delete key
           end
@@ -79,10 +80,10 @@ module Golem
     # update a section of data incrementally
     def update(x, y, z, data)
       if c = chunk(x, z)
-        puts "updating #{[x,y,z].inspect} with #{data.inspect}"
+        # puts "updating #{[x,y,z].inspect} with #{data.inspect}"
         c.update(x, y, z, data)
       else
-        puts "storing update #{[x, y, z].inspect} #{data.inspect}"
+        # puts "storing update #{[x, y, z].inspect} #{data.inspect}"
         (@pending_updates[[x/16, z/16]] ||= []) << [x, y, z, data]
       end
     end

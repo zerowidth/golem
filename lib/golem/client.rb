@@ -264,9 +264,7 @@ module Golem
         deleted = entities.delete packet.id
 
       when :pre_chunk
-        if packet.add
-          # map.preinitialize(packet.x, packet.z)
-        else
+        if !packet.add
           map.drop(packet.x, packet.z)
         end
 
