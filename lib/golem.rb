@@ -17,6 +17,7 @@ module Golem
     action
     actions/watch
     actions/follow
+    actions/come
     actions/hole
     actions/survey
     actions/build

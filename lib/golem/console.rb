@@ -122,6 +122,13 @@ module Golem
           puts "watch <player>"
         end
 
+      when "here"
+        if player = args.first
+          client.come_to(player)
+        else
+          puts "here <player> -- move to where the player is"
+        end
+
       when "follow"
         if player = args.first
           client.follow(player)

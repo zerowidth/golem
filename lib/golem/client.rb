@@ -153,6 +153,17 @@ module Golem
       action Actions::Follow, player, id, pos
     end
 
+    def come_to(player)
+      pos = nil
+      if entity = entities.detect { |i, e| e.name == player }
+        id, entity = *entity
+        pos = entity.position
+        action Actions::Come, pos
+      else
+        puts "#{player} unknown"
+      end
+    end
+
     def survey(blueprint)
       action Actions::Survey, blueprint, coords
     end
