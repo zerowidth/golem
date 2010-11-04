@@ -1,0 +1,6 @@
+= Golem: a Minecraft Alpha client / bot / proxy / tool
+
+This is a tool, not a weapon. Be nice.
+
+Pull requests accepted.
+
