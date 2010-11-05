@@ -60,7 +60,7 @@ module Golem
         z = subrange(z, [cz - o_z - radius, cz - o_z + radius])
       end
 
-      y[0].upto(y[1]) do |y|
+      x_z = lambda do |y|
         x[0].upto(x[1]) do |x|
           z[0].upto(z[1]) do |z|
             if needs_to_be = local(x, y, z)
@@ -72,6 +72,13 @@ module Golem
           end
         end
       end
+
+      if direction == :top_down
+        y[1].downto(y[0], &x_z)
+      else
+        y[0].upto(y[1], &x_z)
+      end
+
       changes
     end
 

@@ -3,6 +3,7 @@ module Golem
   require "yaml"
   require "zlib"
   require "pathname"
+  require "timeout"
 
   require "eventmachine"
   require "chunky_png"

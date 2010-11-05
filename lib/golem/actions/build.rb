@@ -2,40 +2,69 @@ module Golem
   module Actions
     class Build < Action
 
-      attr_reader :blueprint, :state, :pending_moves
-      attr_reader :location
+      attr_reader :blueprint, :center
+      attr_reader :state
+      attr_reader :actions, :placed
 
       def setup(blueprint_file, center)
         @center = center
         @blueprint = Blueprint.new(blueprint_file, center)
+        @state = :dig # or :place
+        @actions = []
+        @placed = {}
         @done = false
-        @pending_moves = nil
-        @location = Location.new(map)
 
-        @cleared = false
-        @state = :dig # :move, :place
-
-        puts "building #{blueprint_file} centered at #{center.inspect}"
-
-        puts "survey of #{blueprint_file} centered at #{center.inspect}:"
-        blueprint.survey(map).each do |change|
-          puts "  #{change.inspect}"
-        end
-        puts "---"
+        puts "building #{blueprint_file} centered at #{center.inspect} -- #{blueprint.range.inspect}"
+        # blueprint.survey_coords(map, :top_down).each do |*change|
+        #   puts "  #{change.inspect}"
+        # end
+        # puts "---"
 
       rescue Errno::ENOENT => e
+        @done = true
         puts "#{e.message}"
       end
 
       def tick
-        puts "tick: #{state.inspect}"
-        case state
-        when :dig
-          dig
-        when :place
-          place
-        when :move
-          move
+        if actions.empty?
+          @actions = next_actions
+
+          if actions.empty?
+            if state == :dig
+              puts "done clearing, now placing"
+              @state = :place
+            else
+              puts "all done!"
+              @done = true
+            end
+          end
+
+        else
+
+          10.times do
+            break if actions.empty?
+            action, coords = actions.shift
+            case action
+            when :dig
+              puts "dig #{coords[0]} #{coords[1]} #{coords[2]}"
+              client.dig(*coords)
+            when :place
+              puts "place #{coords[0]} #{coords[1]} #{coords[2]} #{coords[3]}"
+              client.place(*coords)
+            when :move
+              @last_move = coords
+              puts "move #{coords[0]} #{coords[1]} #{coords[2]}"
+              client.move_to(*coords)
+            end
+          end
+
+        end
+      end
+
+      def update(packet)
+        if packet.class.kind == :player_move_look
+          where = [packet.x, packet.y, packet.z]
+          puts "crap! moved incorrectly! #{@last_move.inspect} --> #{where.inspect}"
         end
       end
 
@@ -43,139 +72,84 @@ module Golem
         @done
       end
 
-      def cleared?
-        @cleared
+      protected
+
+      def location
+        @location ||= Location.new(map)
       end
 
-      def dig
-        to_consider = location.available(*client.coords, :build)
+      def next_actions
 
-        survey = blueprint.survey_coords(map)
-        to_dig = to_consider.select do |dig|
-          # TODO smarter about water interfering, etc.
-          survey[dig] && survey[dig][0] != survey[dig][1] && map.solid?(*dig)
-        end
+        survey = next_changes
 
-        if to_dig.empty?
-          puts "nothing left to dig, moving"
-          @state = :move
-        else
-          puts "digging: #{to_dig.inspect}"
-          to_dig.each {|where| client.dig(*where) }
-        end
-      end
+        next_actions = []
+        current = client.coords
 
-      def place
-        to_consider = location.available(*client.coords, :build)
-        puts "blocks under consideration: #{to_consider.inspect}"
-
-        survey = blueprint.survey_coords(map)
-
-        to_place = to_consider.select do |place|
-          survey[place] && survey[place][0] != survey[place][1] &&
-            SOLID.include?(survey[place][1]) &&
-            !map.solid?(*place) &&
-            map[*place] != :torch
-        end
-
-        if to_place.empty?
-          puts "nothing left to place, moving"
-          @state = :move
-        else
-          to_place.each do |where|
-            block = survey[where][1]
-            code = BLOCKS.detect {|code, name| name == block}[0]
-
-            a, b = survey[where]
-            c = map[*where]
-            puts "placing #{block.inspect} at #{where.inspect}, #{a} #{b} #{c}: #{code}"
-            client.place(*where, code)
-          end
-        end
-
-      end
-
-      def move
-        if pending_moves.nil?
-
-          if cleared?
-            next_blocks = blocks_to_place
-          else
-            next_blocks = blocks_to_clear
+        until survey.empty? || next_actions.size >= 100
+          begin
+            path_to_nearest = Timeout.timeout(10) { map.path(current, survey.keys, :next_to, placed) }
+          rescue Timeout::Error
+            path_to_nearest = nil
           end
 
-          if next_blocks.empty?
-            if cleared?
-              puts "all done!"
-              @done = true
-            else
-              puts "all clear, now placing blocks"
-              @cleared = true
-              @state = :place
-            end
+          break unless path_to_nearest
 
-          else
+          path_to_nearest.each { |p| next_actions << [:move, p] }
+          current = path_to_nearest.last || current
 
-            path = map.path(client.coords, next_blocks, :next_to)
-            @pending_moves = path
-
-          end
-
-        else
-          if move = pending_moves.shift
-            puts "moving to #{move.inspect}"
-            client.move_to(*move)
-          end
-
-          if pending_moves.empty?
-            @pending_moves = nil
-            if cleared?
-              @state = :place
-            else
-              @state = :dig
+          location.available(*current, :build).each do |check|
+            if survey[check]
+              if state == :dig
+                next_actions << [:dig, check]
+              else
+                block = survey[check][1]
+                code = BLOCKS.detect {|c, name| name == block}[0]
+                next_actions << [:place, check + [code]]
+                placed[check] = true # don't use this for pathfinding anymore!
+              end
+              survey.delete check
             end
           end
         end
+
+        next_actions
       end
 
-      # list of blocks that need to be replaced still
-      def blocks_to_place
-        blocks = []
+      def next_changes
+        survey = blueprint.survey_coords(map, state == :dig ? :top_down : :bottom_up, client.coords, 8)
+        survey = changes_from_survey(survey)
 
-        # survey = blueprint.survey_coords(map, client.coords)
-        # if survey.empty?
-        #   puts "local survey insufficient, doing full survey"
-          survey = blueprint.survey_coords(map)
-        # end
-
-        survey.each do |coords, current, needs_to_be|
-          if current != needs_to_be && needs_to_be != :air
-            blocks << coords
-          end
+        if survey.empty?
+          puts "using bigger survey"
+          survey = blueprint.survey_coords(map, state == :dig ? :top_down : :bottom_up, client.coords, 16)
+          survey = changes_from_survey(survey)
         end
 
-        puts "#{blocks.size} blocks left to place"
+        if survey.empty?
+          puts "using full survey"
+          survey = blueprint.survey_coords(map, state == :dig ? :top_down : :bottom_up)
+          survey = changes_from_survey(survey)
+        end
 
-        blocks
+        survey
       end
 
-      def blocks_to_clear
-        blocks = []
-
-        # survey = blueprint.survey_coords(map, client.coords)
-        # if survey.empty?
-        #   puts "local survey insufficient, doing full survey"
-          survey = blueprint.survey_coords(map)
-        # end
-
-        survey.each do |coords, current, needs_to_be|
-          if current != needs_to_be && map.solid?(*coords)
-            blocks << coords
-          end
+      def changes_from_survey(survey)
+        survey.delete_if do |position, change|
+          needs_change = state == :dig ? needs_clearing?(position, change) : needs_placement?(position, change)
+          !needs_change || !location.available(*position, :next_to).any? { |l| location.allowed?(*l) }
         end
-        puts "#{blocks.size} blocks left to clear"
+      end
 
-        blocks
+
+      def needs_clearing?(position, change)
+        from, to = change
+        SOLID.include?(from) && (SOLID.include?(to) || to == :air)
+      end
+
+      def needs_placement?(position, change)
+        from, to = change
+        SOLID.include?(to)
       end
 
     end
