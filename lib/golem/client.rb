@@ -166,6 +166,26 @@ module Golem
       end
     end
 
+    def send_empty_inventory
+      # tell the server we have all the tools, but plenty of room for picking up the things we just dug
+      send_packet :player_inventory, [-3, [nil, nil, nil, nil]]
+      send_packet :player_inventory, [-2, [nil, nil, nil, nil]]
+      send_packet :player_inventory, [-1, [
+        # main inventory slots:
+        [276, 1, 1], # sword
+        [277, 1, 1], # spade
+        [278, 1, 1], # pickaxe
+        [279, 1, 1], # axe
+        nil, nil, nil, nil,
+        [345, 1, 0], # compass
+
+        nil, nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil, nil
+      ]]
+    end
+
+
     def survey(blueprint, center = nil)
       where = center || coords
       action Actions::Survey, blueprint, where
@@ -250,6 +270,10 @@ module Golem
       when :named_entity_spawn
         pos = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
         entities[packet.id] = Entity.new pos, :player, packet.name
+
+      when :pickup_spawn
+        pos = [packet.x, packet.y, packet.z].map {|l| l/32 } # absolute positions
+        entities[packet.id] = Entity.new pos, :pickup
 
       when :entity_move, :entity_move_look
         if entity = entities[packet.id]

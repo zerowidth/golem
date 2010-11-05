@@ -161,23 +161,7 @@ module Golem
         ]]
 
       when "empty"
-        # tell the server we have all the tools, but plenty of room for picking up the things we just dug
-        client.send_packet :player_inventory, [-3, [nil, nil, nil, nil]]
-        client.send_packet :player_inventory, [-2, [nil, nil, nil, nil]]
-        client.send_packet :player_inventory, [-1, [
-          # main inventory slots:
-          [276, 1, 1], # sword
-          [277, 1, 1], # spade
-          [278, 1, 1], # pickaxe
-          [279, 1, 1], # axe
-          nil, nil, nil, nil,
-          [345, 1, 0], # compass
-
-          nil, nil, nil, nil, nil, nil, nil, nil, nil,
-          nil, nil, nil, nil, nil, nil, nil, nil, nil,
-          nil, nil, nil, nil, nil, nil, nil, nil, nil
-        ]]
-
+        client.send_empty_inventory
       when "survey"
         if blueprint = args.shift
           if args.size == 3

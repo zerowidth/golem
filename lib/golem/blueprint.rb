@@ -28,11 +28,15 @@ module Golem
     end
 
     def range
-      [
+      @range ||= [
         offset[0]..(offset[0] + size[0] - 1),
         offset[1]..(offset[1] + size[1] - 1),
         offset[2]..(offset[2] + size[2] - 1)
       ]
+    end
+
+    def includes?(x, y, z)
+      range[0].include?(x) && range[1].include?(y) && range[2].include?(z)
     end
 
     # absolute map coordinates
