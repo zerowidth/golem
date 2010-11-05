@@ -197,12 +197,12 @@ module Golem
       puts Time.now.strftime("%F %H:%M:%S.%3N ") << msg
     end
 
-    protected
-
     def action(action_class, *args)
       @current_action = action_class.new(self, map)
       @current_action.setup(*args)
     end
+
+    protected
 
     def handle(packet)
       case packet.class.kind

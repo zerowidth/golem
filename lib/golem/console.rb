@@ -210,6 +210,9 @@ module Golem
           puts "build <blueprint>"
         end
 
+      when "digtest"
+        client.action Actions::DigTest
+
       else
         puts "unrecognized"
       end

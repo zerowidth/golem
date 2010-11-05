@@ -22,6 +22,7 @@ module Golem
     actions/hole
     actions/survey
     actions/build
+    actions/dig_test
     field
     packet
     packets
