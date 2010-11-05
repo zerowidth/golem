@@ -164,8 +164,9 @@ module Golem
       end
     end
 
-    def survey(blueprint)
-      action Actions::Survey, blueprint, coords
+    def survey(blueprint, center = nil)
+      where = center || coords
+      action Actions::Survey, blueprint, where
     end
 
     def build(blueprint, center = nil)
@@ -211,11 +212,11 @@ module Golem
         9.times { send_packet :keepalive }
 
         # keepalive
-        EM.add_periodic_timer(0.5) { send_packet :flying_ack, position.flying if position.x }
+        EM.add_periodic_timer(1) { send_packet :flying_ack, position.flying if position.x }
         EM.add_periodic_timer(10) { send_packet :keepalive }
 
         # general action proessing
-        EM.add_periodic_timer(0.1) do
+        EM.add_periodic_timer(0.25) do
           if current_action
             if current_action.done?
               @current_action = nil

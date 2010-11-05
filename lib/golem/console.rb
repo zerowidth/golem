@@ -160,23 +160,51 @@ module Golem
           [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0],
         ]]
 
+      when "empty"
+        # tell the server we have all the tools, but plenty of room for picking up the things we just dug
+        client.send_packet :player_inventory, [-3, [nil, nil, nil, nil]]
+        client.send_packet :player_inventory, [-2, [nil, nil, nil, nil]]
+        client.send_packet :player_inventory, [-1, [
+          # main inventory slots:
+          [276, 1, 1], # sword
+          [277, 1, 1], # spade
+          [278, 1, 1], # pickaxe
+          [279, 1, 1], # axe
+          nil, nil, nil, nil,
+          [345, 1, 0], # compass
+
+          nil, nil, nil, nil, nil, nil, nil, nil, nil,
+          nil, nil, nil, nil, nil, nil, nil, nil, nil,
+          nil, nil, nil, nil, nil, nil, nil, nil, nil
+        ]]
+
       when "survey"
-        if blueprint = args.first
-          client.survey(blueprint)
+        if blueprint = args.shift
+          if args.size == 3
+            x, y, z = args.map(&:to_i)
+            client.survey(blueprint, [x, y, z])
+          elsif !args.empty?
+            puts "survey <blueprint> [x y z]"
+          else
+            client.survey(blueprint)
+          end
         else
-          puts "survey <blueprint>"
+          puts "survey <blueprint> [x y z]"
         end
 
       when "build"
         if blueprint = args.shift
-          client.build(blueprint)
-
           if args.size == 3
             x, y, z = args.map(&:to_i)
             client.build(blueprint, [x, y, z])
           elsif !args.empty?
             puts "build <blueprint> [x y z]"
+          else
+            client.build(blueprint)
           end
+        else
+          puts "build <blueprint> [x y z]"
+        end
 
         else
           puts "build <blueprint>"

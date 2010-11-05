@@ -8,8 +8,10 @@ module Golem
         @center = center
         @blueprint = Blueprint.new(blueprint_file, center)
 
-        puts "survey of #{blueprint_file} centered at #{center.inspect}:"
-        blueprint.survey(map).each do |change|
+        puts "survey of #{blueprint_file} centered at #{center.inspect} -- #{blueprint.range.inspect}"
+        survey = blueprint.survey_coords(map)
+        puts "#{survey.size} changes"
+        survey.each do |*change|
           puts "  #{change.inspect}"
         end
 

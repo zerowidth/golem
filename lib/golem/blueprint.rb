@@ -27,6 +27,14 @@ module Golem
       block_data[ x * size[1] * size[2] + y + z * size[1] ]
     end
 
+    def range
+      [
+        offset[0]..(offset[0] + size[0] - 1),
+        offset[1]..(offset[1] + size[1] - 1),
+        offset[2]..(offset[2] + size[2] - 1)
+      ]
+    end
+
     # absolute map coordinates
     def [](x, y, z)
       local_x = x - offset[0]
@@ -36,30 +44,7 @@ module Golem
       local(local_x, local_y, local_z)
     end
 
-    # returns a histogram of the blocks that need to be changed
-    #
-    # NOTE this is assuming 100% removal for now
-    #
-    def survey(map)
-      changes = []
-      o_x, o_y, o_z = offset
-      0.upto(size[1] - 1) do |y|
-        0.upto(size[0] - 1) do |x|
-          0.upto(size[2] - 1) do |z|
-            if needs_to_be = local(x, y, z)
-              current = map[x + o_x, y + o_y, z + o_z]
-              if current != needs_to_be
-              # if map.solid?(x + o_x, y + o_y, z + o_z) && current != needs_to_be
-                changes << [[x + o_x, y + o_y, z + o_z], current, needs_to_be]
-              end
-            end
-          end
-        end
-      end
-      changes
-    end
-
-    def survey_coords(map, center=nil)
+    def survey_coords(map, direction=:bottom_up, center = nil, radius=10)
       changes = {}
 
       o_x, o_y, o_z = offset
@@ -70,9 +55,9 @@ module Golem
 
       if center
         cx, cy, cz = center
-        x = subrange(x, [cx - o_x - 5, cx - o_x + 5])
-        y = subrange(y, [cy - o_y - 5, cy - o_y + 5])
-        z = subrange(z, [cz - o_z - 5, cz - o_z + 5])
+        x = subrange(x, [cx - o_x - radius, cx - o_x + radius])
+        y = subrange(y, [cy - o_y - radius, cy - o_y + radius])
+        z = subrange(z, [cz - o_z - radius, cz - o_z + radius])
       end
 
       y[0].upto(y[1]) do |y|

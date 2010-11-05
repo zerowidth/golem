@@ -45,6 +45,12 @@ describe Golem::Blueprint do
       end
     end
 
+    describe "#range" do
+      it "returns the ranges of x, y, z coords involved in the blueprint" do
+        @bp.range.should == [9..11, 20..21, 28..32]
+      end
+    end
+
     describe "#local(x,y,z)" do
       it "returns block data using 0-originated map coords" do
         @bp.local(0, 0, 0).should == :air
