@@ -1,7 +1,7 @@
 module Golem
   class Map
 
-    MAX_PATH_SIZE = 130 # bottom to top of chunk, plus a few
+    MAX_PATH_SIZE = 64 # even this is a lot if the end goal is unavailable...
 
     def initialize
       @chunks = {}
@@ -110,17 +110,24 @@ module Golem
       end
     end
 
+    def location
+      @location ||= Location.new(self)
+    end
+
     def available(x, y, z, mode = :move)
-      Location.new(self).available(x, y, z, mode)
+      location.available(x, y, z, mode)
     end
 
     # A* algorithm adapted from http://rubyquiz.com/quiz98.html
     # with hints from http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-    def path(start, goals, mode = :move_to)
+    #
+    # mode can be:
+    #   :move_to --> moves to a position
+    #   :next_to --> next to a position
+    #
+    def path(start, goals, mode = :move_to, ignore={})
       start = start.map(&:to_i)
       goals = goals.flatten.size == 3 ? [goals.flatten] : goals
-
-      location = Location.new(self)
 
       if goals.reject { |goal| (start[0] - goal[0]).abs + (start[1] - goal[1]).abs + (start[2] - goal[2]).abs > MAX_PATH_SIZE }.empty?
         puts "target too far away"
@@ -128,8 +135,12 @@ module Golem
       elsif mode == :move_to && goals.select { |g| location.allowed?(*g) }.empty?
         puts "can't go there..."
         return nil
+      # elsif mode == :next_to && goals.map { |g| location.available(*g, :next_to).any? { |l| location.allowed?(*l) } }.empty?
+      #   puts "nothing to move next to anymore..."
+      #   return nil
       end
       visited = {}
+      next_to = {}
       examined = 0
 
       heap = Heap.new { |a, b| a.cost <=> b.cost }
@@ -158,7 +169,7 @@ module Golem
           end
 
         when :next_to
-          available_for_building = location.available(*point.point, :build)
+          available_for_building = (next_to[point.point] ||= location.available(*point.point, :build))
           if available_for_building.any? { |a| goals.include? a }
             final_path = point.path + [point.point]
             final_path.shift # don't need the start point, we're already there
@@ -169,7 +180,7 @@ module Golem
           raise "unknown pathfinding mode: #{mode.inspect}"
         end
 
-        next_available = location.available(*point.point).each do |test|
+        next_available = location.available(*point.point, :move, ignore).each do |test|
           next if visited[test]
           heap.add Path.new(test, goals, point.path + [point.point])
         end
@@ -219,7 +230,7 @@ module Golem
       @map = map
     end
 
-    def available(x, y, z, mode = :move)
+    def available(x, y, z, mode = :move, ignore = {})
       pos = [x, y, z]
       list = []
 
@@ -233,13 +244,13 @@ module Golem
         transforms = [
           [UP, UP], [DOWN], # two up's so it's overhead
           [NORTH], [EAST], [SOUTH], [WEST],
-          [NORTH, UP], [EAST, UP], [WEST, UP], [SOUTH, UP]#,
-          # [NORTH, EAST], [NORTH, WEST], [SOUTH, EAST], [SOUTH, WEST],
-          # [NORTH, EAST, UP], [NORTH, WEST, UP], [SOUTH, EAST, UP], [SOUTH, WEST, UP],
-          # [NORTH, EAST, DOWN], [NORTH, WEST, DOWN],
-          # [SOUTH, EAST, DOWN], [SOUTH, WEST, DOWN],
-          # [NORTH, EAST, UP, UP], [NORTH, WEST, UP, UP],
-          # [SOUTH, EAST, UP, UP], [SOUTH, WEST, UP, UP],
+          [NORTH, UP], [EAST, UP], [WEST, UP], [SOUTH, UP]
+        ]
+      when :next_to
+        transforms = [
+          [UP], [DOWN, DOWN], # two up's so it's overhead
+          [NORTH], [EAST], [SOUTH], [WEST],
+          [NORTH, DOWN], [EAST, DOWN], [WEST, DOWN], [SOUTH, DOWN]
         ]
       when :follow # following someone, don't get up in their business
         transforms = [
@@ -256,18 +267,18 @@ module Golem
         if mode == :build
           list << test
         else
-          list << test if allowed?(*test, allow_flight)
+          list << test if allowed?(*test, allow_flight, ignore)
         end
       end
 
       list
     end
 
-    def allowed?(x, y, z, allow_flight = true)
+    def allowed?(x, y, z, allow_flight = true, ignore = {})
       block = map[x, y, z]
       above = y == 127 ? :air : map[x, y + 1, z]
       below = map[x, y - 1, z]
-      open = !SOLID.include?(block) && !SOLID.include?(above)
+      open = !SOLID.include?(block) && !SOLID.include?(above) && !ignore[[x, y, z]] && !ignore[[x, y + 1, z]]
       if allow_flight
         open
       else
