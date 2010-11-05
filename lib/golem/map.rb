@@ -124,8 +124,11 @@ module Golem
     # mode can be:
     #   :move_to --> moves to a position
     #   :next_to --> next to a position
+    #   :away_from --> get away from any of the points listed
     #
-    def path(start, goals, mode = :move_to, ignore={})
+    # ignore is a list of points to disregard for pathfinding
+    #
+    def path(start, goals, mode=:move_to, ignore={})
       start = start.map(&:to_i)
       goals = goals.flatten.size == 3 ? [goals.flatten] : goals
 
@@ -168,14 +171,24 @@ module Golem
             return final_path
           end
 
+        when :away_from
+          above = point.point.dup
+          above[1] += 1
+          if !goals.include?(point.point) && !goals.include?(above)
+            final_path = point.path + [point.point]
+            return final_path
+          end
+
         when :next_to
-          available_for_building = (next_to[point.point] ||= location.available(*point.point, :build))
+          next_to[point.point] ||= location.available(*point.point, :build)
+          available_for_building = next_to[point.point]
           if available_for_building.any? { |a| goals.include? a }
             final_path = point.path + [point.point]
             final_path.shift # don't need the start point, we're already there
             # puts "examined #{examined} paths"
             return final_path
           end
+
         else
           raise "unknown pathfinding mode: #{mode.inspect}"
         end

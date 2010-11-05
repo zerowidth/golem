@@ -102,7 +102,7 @@ module Golem
         if args.empty?
           puts "equip <item code>"
         else
-          client.equip args.first.to_i
+          client.equip(args.first.to_i)
         end
 
       when "x", "place"
@@ -188,10 +188,6 @@ module Golem
           end
         else
           puts "build <blueprint> [x y z]"
-        end
-
-        else
-          puts "build <blueprint>"
         end
 
       when "digtest"
