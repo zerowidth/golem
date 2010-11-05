@@ -110,12 +110,14 @@ module Golem
       to_send << [:block_dig, 0, x, y, z, face]
       to_send << [:arm_animation, 0, true]
 
-      100.times do
+      # an extra 5 packets for good measure seems to make it work better
+      count = (DIGS[map[x, y, z]] || 3000) + 5
+      count.times do
         to_send << [:block_dig, 1, x, y, z, face]
       end
 
       to_send << [:block_dig, 3, x, y, z, face]
-      # to_send << [:block_dig, 2, 0, 0, 0, 0]
+      to_send << [:block_dig, 2, 0, 0, 0, 0]
 
       to_send.each { |packet| send_packet(*packet) }
 
