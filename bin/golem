@@ -5,7 +5,7 @@ $:.unshift(File.expand_path(File.dirname(__FILE__) + "/../lib"))
 require "golem"
 
 if ARGV.include?("-h") || ARGV.include?("--help")
-  abort "golem [host=localhost [port=25565]]"
+  abort "golem [host=localhost [port=25565]] | proxy [host=localhost [port=25565 [listen_port=8888]]]"
 end
 
 if ARGV.first == "proxy"
