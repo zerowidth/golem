@@ -237,12 +237,12 @@ module Golem
 
       def needs_clearing?(position, change)
         from, to = change
-        SOLID.include?(from) && (SOLID.include?(to) || to == :air)
+        SOLID.include?(from) && (SOLID.include?(to) || to == :air) && ![:lava, :still_lava].include?(from)
       end
 
       def needs_placement?(position, change)
         from, to = change
-        from == :air && SOLID.include?(to)
+        [:water, :still_water, :lava, :still_lava, :air].include?(from) && SOLID.include?(to)
       end
 
     end

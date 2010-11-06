@@ -167,10 +167,14 @@ module Golem
             :stone
           when [128, 128, 128, 255] # mid-grey
             :cobble
+          when [0, 255, 255, 255] # cyan
+            :glass
           when [64, 0, 64, 255] # purple
             :obsidian
           when [255, 255, 0, 255] # yellow
             :lightstone
+          when [255, 128, 0, 255] # orange
+            :still_lava
           when [0, 0, 0, 255] # black
             :air
 
