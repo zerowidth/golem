@@ -8,8 +8,15 @@ if ARGV.include?("-h") || ARGV.include?("--help")
   abort "golem [host=localhost [port=25565]]"
 end
 
-host = ARGV.shift || "127.0.0.1"
-port = (ARGV.shift || 25565).to_i
-
-Golem::Session.start(host, port)
+if ARGV.first == "proxy"
+  ARGV.shift
+  host = ARGV.shift || "127.0.0.1"
+  port = (ARGV.shift || 25565).to_i
+  listen_port = (ARGV.shift || 8888).to_i
+  Golem::Proxy.start("127.0.0.1", listen_port, host, port)
+else
+  host = ARGV.shift || "127.0.0.1"
+  port = (ARGV.shift || 25565).to_i
+  Golem::Session.start(host, port)
+end
 

@@ -9,16 +9,18 @@ module Golem
     end
 
     def post_init
-      puts "got connection"
+      puts "proxying new connection"
       @server_parser = Parser.new
       @client_parser = Parser.new(false)
     end
 
     def receive_data(data)
+      to_send = ""
       client_parser.parse(data).each do |packet|
-        puts "<-- #{packet.inspect}"
+        # puts "<-- #{packet.inspect}"
+        to_send << packet.raw
       end
-      server.send_data data
+      server.send_data to_send unless to_send.empty?
     end
 
     def send_data(data)
@@ -26,10 +28,12 @@ module Golem
     end
 
     def from_server(data)
+      to_send = ""
       server_parser.parse(data).each do |packet|
-        puts "--> #{packet.inspect}"
+        # puts "--> #{packet.inspect}"
+        to_send << packet.raw
       end
-      send_data(data)
+      send_data to_send unless to_send.empty?
     end
 
   end

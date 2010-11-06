@@ -111,16 +111,23 @@ module Golem
       end
     end
 
-    attr_reader :values
+    attr_reader :values, :raw
 
     def initialize(*values)
       @values = values
     end
 
+    def kind
+      self.class.kind
+    end
+
     def parse(data)
       @values = []
+      @raw = [self.class.code].pack("C")
       self.class.fields.each do |field|
-        *values, data = field.new.parse(data)
+        f = field.new
+        *values, data = f.parse(data)
+        raw << f.raw
         @values.concat values
       end
       data

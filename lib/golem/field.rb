@@ -1,10 +1,11 @@
 module Golem
   module Field
     class Base
-      attr_reader :value
+      attr_reader :value, :raw
 
       def initialize(value=nil)
         @value = value
+        @raw = ""
       end
 
       # sets the value based on type and returns the remaining data
@@ -22,6 +23,10 @@ module Golem
       def consume(data, pattern)
         results = data.unpack(pattern + "a*")
         raise IncompletePacket if results.any? {|r| r.nil?}
+
+        bytes = data.length - results.last.length
+        raw << data[0...bytes]
+
         results
       end
     end
@@ -165,6 +170,7 @@ module Golem
         chunk_size, data = consume data, "N"
         if data.size >= chunk_size
           chunk_data = data[0...chunk_size]
+          raw << chunk_data
           class << chunk_data
             def inspect
               "chunk data - #{size} bytes"

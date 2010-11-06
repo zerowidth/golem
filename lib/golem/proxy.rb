@@ -5,7 +5,7 @@ module Golem
       EM.epoll
       EM.run do
         EM.start_server(host, port, Interceptor, server_host, server_port)
-
+        puts "listening on #{host}:#{port}, proxying to #{server_host}:#{server_port}"
         trap("TERM") { stop }
         trap("INT")  { stop }
       end
@@ -15,6 +15,5 @@ module Golem
       puts "shutting down"
       EM.stop
     end
-
   end
 end
