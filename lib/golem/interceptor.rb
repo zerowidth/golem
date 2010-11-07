@@ -3,6 +3,7 @@ module Golem
   class Interceptor < EM::Connection
 
     attr_reader :server, :server_parser, :client_parser
+    attr_reader :state
 
     def initialize(server_host, server_port)
       @server = EM.connect(server_host, server_port, Server, self)
@@ -12,7 +13,8 @@ module Golem
       puts "proxying new connection"
       @server_parser = Parser.new
       @client_parser = Parser.new(false)
-      @time = 0
+      @state = State.new
+      @time = nil
     end
 
     def unbind
@@ -20,25 +22,17 @@ module Golem
       EM.stop
     end
 
-    def receive_data(data)
+    def receive_data(data) # from client, outbound
       to_send = ""
       client_parser.parse(data).each do |packet|
-        if packet.kind == :chat && packet.values.first =~ /\/time (\d+|dawn|sunrise|dusk|sunset|noon|midnight)/
-          case $1
-          when "dawn", "sunrise"
-            @time = 23000
-          when "dusk", "sunset"
-            @time = 13000
-          when "noon"
-            @time = 6000
-          when "midnight"
-            @time = 18000
-          else
-            @time = $1.to_i
-          end
-          tell_client "setting time to #{$1}"
-        else
+        state.update packet
+
         # puts "<-- #{packet.inspect}"
+        if packet.kind == :chat
+          unless proxy_command(packet)
+            to_send << packet.raw
+          end
+        else
           to_send << packet.raw
         end
       end
@@ -52,7 +46,8 @@ module Golem
     def from_server(data)
       to_send = ""
       server_parser.parse(data).each do |packet|
-        if packet.kind == :update_time
+        state.update packet
+        if packet.kind == :update_time && @time
           to_send << Packet.server_packets_by_kind[:update_time].new(@time).encode
         else
           to_send << packet.raw
@@ -60,6 +55,33 @@ module Golem
         # puts "--> #{packet.inspect}"
       end
       send_data to_send unless to_send.empty?
+    end
+
+    def proxy_command
+      message = packet.values.first
+      case message
+      when /\/time (\d+|dawn|sunrise|dusk|sunset|noon|midnight|server)/
+        case $1
+        when "dawn", "sunrise"
+          @time = 23000
+        when "dusk", "sunset"
+          @time = 13000
+        when "noon"
+          @time = 6000
+        when "midnight"
+          @time = 18000
+        when "server"
+          @time = nil
+        else
+          @time = $1.to_i
+        end
+        tell_client "setting time to #{$1}"
+      when /\/(where|gps)/
+        tell_client "current coords: #{state.coords.inspect}"
+      else
+        return false
+      end
+      true
     end
 
     def tell_client(msg)

@@ -1,8 +1,5 @@
 module Golem
 
-  Position = Struct.new(:x, :y, :stance, :z, :rotation, :pitch, :flying)
-  Entity = Struct.new(:position, :type, :name)
-
   class Client < ::EventMachine::Connection
 
     STANCE = 1.62000000476837

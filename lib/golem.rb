@@ -13,6 +13,7 @@ module Golem
 
   %w(
     blocks
+    state
     session
     console
     client
