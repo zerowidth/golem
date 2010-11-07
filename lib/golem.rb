@@ -12,6 +12,7 @@ module Golem
   IncompletePacket = Class.new(Error)
 
   %w(
+    blocks
     session
     console
     client
