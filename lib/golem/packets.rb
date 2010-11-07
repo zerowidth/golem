@@ -313,6 +313,13 @@ module Golem
       field :payload, Field::EntityPayload
     end
 
+    client_packet :complex_entity, 0x3b do
+      int :x
+      short :y
+      int :z
+      field :payload, Field::EntityPayload
+    end
+
     client_packet :disconnect, 0xff do
       string :message
     end
