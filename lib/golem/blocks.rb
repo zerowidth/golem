@@ -80,6 +80,8 @@ module Golem
     91 => :jack_o_lantern
   }
 
+  CODES = BLOCKS.invert
+
   SOLID = [
     :stone,
     :grass,
@@ -140,61 +142,63 @@ module Golem
     :bloodstone,
     :slow_sand,
     :lightstone
-  ]
+  ].map {|b| CODES[b] }
 
   WATER = [
     :water,
     :still_water
-  ]
+  ].map {|b| CODES[b] }
 
   TOOLS = {
     # shovel
-    277 => [:grass, :dirt, :sand, :gravel, :soil, :snow, :snow_block, :slow_sand],
+    277 => [:grass, :dirt, :sand, :gravel, :soil, :snow, :snow_block, :slow_sand].map {|b| CODES[b] },
     # pick
-    278 => [:stone, :cobble, :gold_ore, :iron_ore, :coal_ore, :gold_block, :iron_block, :double_step, :step, :brick, :mossy_cobble, :obsidian, :diamond_ore, :diamond_block, :cobble_stairs, :redstone_ore, :glowing_redstone_ore, :ice, :cactus, :bloodstone, :lightstone],
+    278 => [:stone, :cobble, :gold_ore, :iron_ore, :coal_ore, :gold_block, :iron_block, :double_step, :step, :brick, :mossy_cobble, :obsidian, :diamond_ore, :diamond_block, :cobble_stairs, :redstone_ore, :glowing_redstone_ore, :ice, :cactus, :bloodstone, :lightstone].map {|b| CODES[b] },
     # axe
-    279 => [:wood, :log, :leaves, :fence]
+    279 => [:wood, :log, :leaves, :fence].map {|b| CODES[b] }
   }
 
-  DIGS = {
-    :stone => 29,
-    :grass => 12,
-    :dirt => 10,
-    :cobble => 38,
-    :wood => 38,
-    :sand => 10,
-    :gravel => 12,
-    :gold_ore => 57,
-    :iron_ore => 57,
-    :coal_ore => 57,
-    :log => 38,
-    :leaves => 30,
-    :sponge => 90,
-    :glass => 46,
-    :cloth => 121,
-    :gold_block => 57,
-    :iron_block => 94,
-    :brick => 301,
-    :bookcase => 226,
-    :mossy_cobble => 38,
-    :obsidian => 1501,
-    :chest => 376,
-    :diamond_ore => 57,
-    :diamond_block => 94,
-    :workbench => 376,
-    :soil => 90,
-    :furnace => 350,
-    :burning_furnace => 350,
-    :sign_post => 151,
-    :redstone_ore => 450,
-    :glowing_redstone_ore => 450,
-    :snow_block => 4,
-    :clay => 90,
-    :jukebox => 301,
-    :fence => 301,
-    :bloodstone => 8,
-    :slow_sand => 76,
-    :lightstone => 46
-  }
+  DIGS = Hash[
+    {
+      :stone => 29,
+      :grass => 12,
+      :dirt => 10,
+      :cobble => 38,
+      :wood => 38,
+      :sand => 10,
+      :gravel => 12,
+      :gold_ore => 57,
+      :iron_ore => 57,
+      :coal_ore => 57,
+      :log => 38,
+      :leaves => 30,
+      :sponge => 90,
+      :glass => 46,
+      :cloth => 121,
+      :gold_block => 57,
+      :iron_block => 94,
+      :brick => 301,
+      :bookcase => 226,
+      :mossy_cobble => 38,
+      :obsidian => 1501,
+      :chest => 376,
+      :diamond_ore => 57,
+      :diamond_block => 94,
+      :workbench => 376,
+      :soil => 90,
+      :furnace => 350,
+      :burning_furnace => 350,
+      :sign_post => 151,
+      :redstone_ore => 450,
+      :glowing_redstone_ore => 450,
+      :snow_block => 4,
+      :clay => 90,
+      :jukebox => 301,
+      :fence => 301,
+      :bloodstone => 8,
+      :slow_sand => 76,
+      :lightstone => 46
+    }.map { |c, d| [CODES[c], d] }
+  ]
 
 end

@@ -129,7 +129,7 @@ module Golem
     end
 
     def block_at(x, y, z)
-      map[x, y, z]
+      BLOCKS[map[x, y, z]]
     end
 
     def watch(player)

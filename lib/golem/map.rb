@@ -289,7 +289,7 @@ module Golem
 
     def allowed?(x, y, z, allow_flight = true, ignore = {})
       block = map[x, y, z]
-      above = y == 127 ? :air : map[x, y + 1, z]
+      above = y == 127 ? CODES[:air] : map[x, y + 1, z]
       below = map[x, y - 1, z]
       open = !SOLID.include?(block) && !SOLID.include?(above) && !ignore[[x, y, z]] && !ignore[[x, y + 1, z]]
       if allow_flight

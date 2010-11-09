@@ -83,11 +83,7 @@ module Golem
       @blocks = []
       data = Zlib::Inflate.inflate(@data)
       size = @size_x * @size_y * @size_z
-      *block_types = data[0...size].unpack("c#{size}")
-      block_types.each do |code|
-        @blocks << BLOCKS[code]
-      end
-      @blocks
+      @blocks = data[0...size].unpack("c#{size}")
     end
 
   end

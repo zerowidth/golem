@@ -5,7 +5,7 @@ module Golem
     class << self
 
       def parse(data, server_packet=true)
-        code, data = data.unpack("Ca*")
+        code = data[0].ord
         packet_class = server_packet ? server_packets_by_code[code] : client_packets_by_code[code]
 
         unless packet_class
@@ -16,7 +16,7 @@ module Golem
         # puts "#{'0x%0x' % code}: #{packet_class.kind}"
 
         packet = packet_class.new
-        remainder = packet.parse(data)
+        remainder = packet.parse(data[1..-1])
         [packet, remainder]
       end
 

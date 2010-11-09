@@ -14,7 +14,7 @@ module Golem
           :snow, # need to improve look_at code for this to work
           :cactus # requires special placement
         ].each do |skip|
-          test_blocks.delete skip
+          test_blocks.delete CODES[skip]
         end
 
         next_block
@@ -47,8 +47,7 @@ module Golem
       end
 
       def place(block)
-        code = BLOCKS.detect {|c, name| name == block}[0]
-        client.equip code
+        client.equip block
         x, y, z = pos
         client.send_packet :place, code, x, y - 1, z, 1
         sleep 0.1
@@ -95,7 +94,7 @@ module Golem
         when :test
           block, min, max = current_block
 
-          if map[*pos] == :air
+          if map[*pos] == CODES[:air]
             if max - min <= 1
               puts "broke at #{max}"
               next_block

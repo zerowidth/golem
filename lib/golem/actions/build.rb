@@ -18,8 +18,9 @@ module Golem
 
         puts "building #{blueprint_file} centered at #{center.inspect} -- #{blueprint.range.inspect}"
         puts "starting at #{Time.now.to_s}"
-        # blueprint.survey_coords(map, :top_down).each do |*change|
-        #   puts "  #{change.inspect}"
+        # blueprint.survey_coords(map, :top_down).each do |location, change|
+        #   change = change.map {|c| BLOCKS[c] }
+        #   puts "  #{location.inspect}: #{change.inspect}"
         # end
         # puts "---"
 
@@ -179,8 +180,7 @@ module Golem
         until survey.empty? || next_actions.size >= 1000
           position, change = survey.shift
           block = change[1]
-          code = BLOCKS.detect {|c, name| name == block}[0]
-          next_actions << [:place, position + [code]]
+          next_actions << [:place, position + [block]]
         end
 
         next_actions
@@ -237,12 +237,17 @@ module Golem
 
       def needs_clearing?(position, change)
         from, to = change
-        SOLID.include?(from) && (SOLID.include?(to) || to == :air) && ![:lava, :still_lava].include?(from)
+        air = CODES[:air]
+        lava, still_lava = CODES[:lava], CODES[:still_lava]
+        SOLID.include?(from) && (SOLID.include?(to) || to == air) && ![lava, still_lava].include?(from)
       end
 
       def needs_placement?(position, change)
         from, to = change
-        [:water, :still_water, :lava, :still_lava, :air].include?(from) && SOLID.include?(to)
+        air = CODES[:air]
+        lava, still_lava = CODES[:lava], CODES[:still_lava]
+        water, still_water = CODES[:water], CODES[:still_water]
+        [water, still_water, lava, still_lava, air].include?(from) && SOLID.include?(to)
       end
 
     end

@@ -11,8 +11,9 @@ module Golem
         puts "survey of #{blueprint_file} centered at #{center.inspect} -- #{blueprint.range.inspect}"
         survey = blueprint.survey_coords(map)
         puts "#{survey.size} changes"
-        survey.each do |*change|
-          puts "  #{change.inspect}"
+        survey.each do |location, change|
+          change = change.map {|c| BLOCKS[c] }
+          puts "  #{location.inspect}: #{change.inspect}"
         end
 
       rescue Errno::ENOENT => e

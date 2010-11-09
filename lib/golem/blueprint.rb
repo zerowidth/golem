@@ -182,7 +182,7 @@ module Golem
             raise "unknown color in #{fn} at #{[img_x,img_y].inspect} #{color.inspect}"
           end
 
-          blocks << block
+          blocks << CODES[block]
         end
       end
 
