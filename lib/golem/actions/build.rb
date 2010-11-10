@@ -110,10 +110,6 @@ module Golem
 
       protected
 
-      def location
-        @location ||= Location.new(map)
-      end
-
       def next_actions
         if pickups.size >= 256
           cleanup_paths
@@ -142,7 +138,7 @@ module Golem
           path_to_nearest.each { |p| next_actions << [:move, p] }
           current = path_to_nearest.last || current
 
-          location.available(*current, :build).each do |check|
+          map.available(*current, :build).each do |check|
             if survey[check]
               next_actions << [:dig, check]
               survey.delete check
@@ -231,7 +227,7 @@ module Golem
       def changes_from_survey(survey)
         survey.delete_if do |position, change|
           needs_change = state == :dig ? needs_clearing?(position, change) : needs_placement?(position, change)
-          !needs_change || !location.available(*position, :next_to).any? { |l| location.allowed?(*l) }
+          !needs_change || !map.available(*position, :next_to).any? { |l| map.allowed?(*l) }
         end
       end
 

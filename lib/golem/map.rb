@@ -3,6 +3,13 @@ module Golem
 
     MAX_PATH_SIZE = 64 # even this is a lot if the end goal is unavailable...
 
+    NORTH = [-1, 0, 0]
+    EAST  = [0, 0, -1]
+    SOUTH = [1, 0, 0]
+    WEST  = [0, 0, 1]
+    UP    = [0, 1, 0]
+    DOWN  = [0, -1, 0]
+
     def initialize
       @chunks = {}
       @pending_changes = {}
@@ -110,139 +117,6 @@ module Golem
       end
     end
 
-    def location
-      @location ||= Location.new(self)
-    end
-
-    def available(x, y, z, mode = :move)
-      location.available(x, y, z, mode)
-    end
-
-    # A* algorithm adapted from http://rubyquiz.com/quiz98.html
-    # with hints from http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-    #
-    # mode can be:
-    #   :move_to --> moves to a position
-    #   :next_to --> next to a position
-    #   :away_from --> get away from any of the points listed
-    #
-    # ignore is a list of points to disregard for pathfinding
-    #
-    def path(start, goals, mode=:move_to, ignore={})
-      start = start.map(&:to_i)
-      goals = goals.flatten.size == 3 ? [goals.flatten] : goals
-
-      if goals.reject { |goal| (start[0] - goal[0]).abs + (start[1] - goal[1]).abs + (start[2] - goal[2]).abs > MAX_PATH_SIZE }.empty?
-        puts "target too far away"
-        return nil
-      elsif mode == :move_to && goals.select { |g| location.allowed?(*g) }.empty?
-        puts "can't go there..."
-        return nil
-      # elsif mode == :next_to && goals.map { |g| location.available(*g, :next_to).any? { |l| location.allowed?(*l) } }.empty?
-      #   puts "nothing to move next to anymore..."
-      #   return nil
-      end
-      visited = {}
-      next_to = {}
-      examined = 0
-
-      heap = Heap.new { |a, b| a.cost <=> b.cost }
-      heap.add Path.new(start, goals, [])
-
-      while !heap.empty?
-        point = heap.next
-
-        if point.path.size > MAX_PATH_SIZE
-          puts "examined #{examined} paths before giving up"
-          return nil
-        end
-
-        next if visited[point.point]
-        visited[point.point] = point
-
-        examined += 1
-
-        case mode
-        when :move_to
-          if goals.include?(point.point)
-            final_path = point.path + [point.point]
-            final_path.shift # don't need the start point, we're already there
-            # puts "examined #{examined} paths"
-            return final_path
-          end
-
-        when :away_from
-          above = point.point.dup
-          above[1] += 1
-          if !goals.include?(point.point) && !goals.include?(above)
-            final_path = point.path + [point.point]
-            return final_path
-          end
-
-        when :next_to
-          next_to[point.point] ||= location.available(*point.point, :build)
-          available_for_building = next_to[point.point]
-          if available_for_building.any? { |a| goals.include? a }
-            final_path = point.path + [point.point]
-            final_path.shift # don't need the start point, we're already there
-            # puts "examined #{examined} paths"
-            return final_path
-          end
-
-        else
-          raise "unknown pathfinding mode: #{mode.inspect}"
-        end
-
-        next_available = location.available(*point.point, :move, ignore).each do |test|
-          next if visited[test]
-          heap.add Path.new(test, goals, point.path + [point.point])
-        end
-      end
-      nil
-    end
-
-  end
-
-  class Path
-    attr_reader :point, :goals, :path
-    def initialize(point, goals, path)
-      @point, @goals, @path = point, goals, path
-    end
-
-    def inspect
-      "<path #{point.inspect} (#{cost}): #{path.inspect}>"
-    end
-
-    def cost
-      goals.map do |goal|
-        heuristic =
-          (goal[0] - point[0]).abs +
-          (goal[1] - point[1]).abs +
-          (goal[2] - point[2]).abs
-        path_cost = path.size
-
-        # scale heuristic by 1% for better efficiency
-        # favors expansion near goal over expansion from start
-        # via http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html#S12
-        heuristic * 101 + path_cost * 100
-      end.min
-    end
-  end
-
-  class Location
-    NORTH = [-1, 0, 0]
-    EAST  = [0, 0, -1]
-    SOUTH = [1, 0, 0]
-    WEST  = [0, 0, 1]
-    UP    = [0, 1, 0]
-    DOWN  = [0, -1, 0]
-
-    attr_reader :map
-
-    def initialize(map)
-      @map = map
-    end
-
     def available(x, y, z, mode = :move, ignore = {})
       pos = [x, y, z]
       list = []
@@ -288,9 +162,9 @@ module Golem
     end
 
     def allowed?(x, y, z, allow_flight = true, ignore = {})
-      block = map[x, y, z]
-      above = y == 127 ? CODES[:air] : map[x, y + 1, z]
-      below = map[x, y - 1, z]
+      block = self[x, y, z]
+      above = y == 127 ? CODES[:air] : self[x, y + 1, z]
+      below = self[x, y - 1, z]
       open = !SOLID.include?(block) && !SOLID.include?(above) && !ignore[[x, y, z]] && !ignore[[x, y + 1, z]]
       if allow_flight
         open
@@ -303,6 +177,115 @@ module Golem
       start.zip(delta).map { |operands| operands.inject(0) { |m, v| m + v } }
     end
 
+    # A* algorithm adapted from http://rubyquiz.com/quiz98.html
+    # with hints from http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+    #
+    # mode can be:
+    #   :move_to --> moves to a position
+    #   :next_to --> next to a position
+    #   :away_from --> get away from any of the points listed
+    #
+    # ignore is a list of points to disregard for pathfinding
+    #
+    def path(start, goals, mode=:move_to, ignore={})
+      start = start.map(&:to_i)
+      goals = goals.flatten.size == 3 ? [goals.flatten] : goals
+
+      if goals.reject { |goal| (start[0] - goal[0]).abs + (start[1] - goal[1]).abs + (start[2] - goal[2]).abs > MAX_PATH_SIZE }.empty?
+        puts "target too far away"
+        return nil
+      elsif mode == :move_to && goals.select { |g| allowed?(*g) }.empty?
+        puts "can't go there..."
+        return nil
+      # elsif mode == :next_to && goals.map { |g| available(*g, :next_to).any? { |l| allowed?(*l) } }.empty?
+      #   puts "nothing to move next to anymore..."
+      #   return nil
+      end
+      visited = {}
+      next_to = {}
+      examined = 0
+
+      heap = Heap.new { |a, b| a.cost <=> b.cost }
+      heap.add Path.new(start, goals, [])
+
+      while !heap.empty?
+        point = heap.next
+
+        if point.path.size > MAX_PATH_SIZE
+          puts "examined #{examined} paths before giving up"
+          return nil
+        end
+
+        next if visited[point.point]
+        visited[point.point] = point
+
+        examined += 1
+
+        case mode
+        when :move_to
+          if goals.include?(point.point)
+            final_path = point.path + [point.point]
+            final_path.shift # don't need the start point, we're already there
+            # puts "examined #{examined} paths"
+            return final_path
+          end
+
+        when :away_from
+          above = point.point.dup
+          above[1] += 1
+          if !goals.include?(point.point) && !goals.include?(above)
+            final_path = point.path + [point.point]
+            return final_path
+          end
+
+        when :next_to
+          next_to[point.point] ||= available(*point.point, :build)
+          available_for_building = next_to[point.point]
+          if available_for_building.any? { |a| goals.include? a }
+            final_path = point.path + [point.point]
+            final_path.shift # don't need the start point, we're already there
+            # puts "examined #{examined} paths"
+            return final_path
+          end
+
+        else
+          raise "unknown pathfinding mode: #{mode.inspect}"
+        end
+
+        next_available = available(*point.point, :move, ignore).each do |test|
+          next if visited[test]
+          heap.add Path.new(test, goals, point.path + [point.point])
+        end
+      end
+      nil
+    end
+
+  end
+
+  class Path
+    attr_reader :point, :goals, :path
+    def initialize(point, goals, path)
+      @point, @goals, @path = point, goals, path
+    end
+
+    def inspect
+      "<path #{point.inspect} (#{cost}): #{path.inspect}>"
+    end
+
+    def cost
+      goals.map do |goal|
+        heuristic =
+          (goal[0] - point[0]).abs +
+          (goal[1] - point[1]).abs +
+          (goal[2] - point[2]).abs
+        path_cost = path.size
+
+        # scale heuristic by 1% for better efficiency
+        # favors expansion near goal over expansion from start
+        # via http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html#S12
+        heuristic * 101 + path_cost * 100
+      end.min
+    end
   end
 
   # from http://rubyquiz.com/quiz40.html
