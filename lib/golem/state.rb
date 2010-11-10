@@ -69,11 +69,11 @@ module Golem
         map.add Chunk.new(packet.x, packet.y, packet.z, packet.size_x, packet.size_y, packet.size_z, packet.values.last)
 
       when :block_change
-        map[packet.x, packet.y, packet.z] = BLOCKS[packet.type]
+        map[packet.x, packet.y, packet.z] = packet.type
 
       when :multi_block_change
         packet.changes.each do |location, type|
-          map[*location] = BLOCKS[type]
+          map[*location] = type
         end
       end
     end
