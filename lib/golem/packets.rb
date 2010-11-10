@@ -221,6 +221,12 @@ module Golem
       byte :pitch
     end
 
+    server_packet :unknown, 0x1c do
+      int :id
+      int :foo
+      short :bar
+    end
+
     server_packet :destroy_entity, 0x1d do
       int :id
     end
