@@ -1,16 +1,17 @@
 module Golem
 
   Position = Struct.new(:x, :y, :stance, :z, :rotation, :pitch, :flying)
-  Entity = Struct.new(:position, :type, :name)
+  Entity = Struct.new(:id, :position, :type, :name)
 
   class State
 
-    attr_reader :map, :position, :entities
+    attr_reader :map, :position, :entities, :players
 
     def initialize
       @map = Map.new
       @position = Position.new
       @entities = {}
+      @players = {}
     end
 
     def update(packet)
@@ -34,15 +35,16 @@ module Golem
         position.rotation, position.pitch, position.flying = rotation, pitch, flying
 
       when :vehicle_spawn, :mob_spawn
-        entities[packet.id] = Entity.new([packet.x, packet.y, packet.z], nil)
+        entities[packet.id] = Entity.new(packet.id, [packet.x, packet.y, packet.z], nil)
 
       when :named_entity_spawn
         pos = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
-        entities[packet.id] = Entity.new pos, :player, packet.name
+        entity = Entity.new packet.id, pos, :player, packet.name
+        entities[packet.id] = players[packet.name] = entity
 
       when :pickup_spawn
         pos = [packet.x, packet.y, packet.z].map {|l| l/32 } # absolute positions
-        entities[packet.id] = Entity.new pos, :pickup
+        entities[packet.id] = Entity.new packet.id, pos, :pickup
 
       when :entity_move, :entity_move_look
         if entity = entities[packet.id]
@@ -58,6 +60,9 @@ module Golem
 
       when :destroy_entity
         deleted = entities.delete packet.id
+        if deleted.type == :player
+          players.delete deleted.name
+        end
 
       when :pre_chunk
         if !packet.add
@@ -65,7 +70,6 @@ module Golem
         end
 
       when :map_chunk
-        before = map.size
         map.add Chunk.new(packet.x, packet.y, packet.z, packet.size_x, packet.size_y, packet.size_z, packet.values.last)
 
       when :block_change
