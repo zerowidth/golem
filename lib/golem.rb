@@ -21,7 +21,6 @@ module Golem
     actions/watch
     actions/follow
     actions/come
-    actions/hole
     actions/survey
     actions/build
     actions/dig_test
