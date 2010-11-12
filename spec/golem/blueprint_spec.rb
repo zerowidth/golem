@@ -53,14 +53,14 @@ describe Golem::Blueprint do
 
     describe "#local(x,y,z)" do
       it "returns block data using 0-originated map coords" do
-        @bp.local(0, 0, 0).should == :air
-        @bp.local(0, 1, 0).should == :stone
+        @bp.local(0, 0, 0).should == Golem::CODES[:air]
+        @bp.local(0, 1, 0).should == Golem::CODES[:stone]
 
-        @bp.local(1, 0, 4).should == :air
-        @bp.local(1, 1, 4).should == :air
+        @bp.local(1, 0, 4).should == Golem::CODES[:air]
+        @bp.local(1, 1, 4).should == Golem::CODES[:air]
 
-        @bp.local(2, 0, 4).should == :stone
-        @bp.local(2, 1, 4).should == :air
+        @bp.local(2, 0, 4).should == Golem::CODES[:stone]
+        @bp.local(2, 1, 4).should == Golem::CODES[:air]
       end
     end
 
@@ -84,7 +84,7 @@ describe Golem::Blueprint do
           :stone, :air,
           :stone, :air,
           :stone, :air,
-        ]
+        ].map {|name| Golem::CODES[name] }
       end
     end
 
@@ -102,18 +102,18 @@ describe Golem::Blueprint do
 
     describe "#[x, y, z] using map coords" do
       it "returns :air for the center point and layer above" do
-        @bp[10, 20, 30].should == :air
-        @bp[10, 21, 30].should == :air
+        @bp[10, 20, 30].should == Golem::CODES[:air]
+        @bp[10, 21, 30].should == Golem::CODES[:air]
       end
 
       it "returns :stone, air for the lower left (image) coords" do
-        @bp[11, 20, 32].should == :stone
-        @bp[11, 21, 32].should == :air
+        @bp[11, 20, 32].should == Golem::CODES[:stone]
+        @bp[11, 21, 32].should == Golem::CODES[:air]
       end
 
       it "returns :air, :stone for the lower right (image) coords" do
-        @bp[11, 20, 28].should == :air
-        @bp[11, 21, 28].should == :stone
+        @bp[11, 20, 28].should == Golem::CODES[:air]
+        @bp[11, 21, 28].should == Golem::CODES[:stone]
       end
 
     end
