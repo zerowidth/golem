@@ -4,15 +4,18 @@ module Golem
 
       attr_reader :pending_moves
 
-      def setup(name, entity_id, position)
+      def setup(name)
         @name = name
-        @following = entity_id
-        @position = position
-        @follow_position = position ? position.map(&:to_i) : nil
+
+        if player = state.players[name]
+          @following = player.id
+          @position = player.position
+          @follow_position = @position ? @position.map(&:to_i) : nil
+        end
 
         @pending_moves = []
 
-        client.log "following #{name}" if @position
+        log "following #{name}" if @position
 
         follow
       end
@@ -22,7 +25,7 @@ module Golem
 
         when :named_entity_spawn
           if packet.name == @name
-            client.log "following #{@name}"
+            log "following #{@name}"
             @following = packet.id
             @position = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
             follow
@@ -43,7 +46,7 @@ module Golem
 
         when :destroy_entity
           if packet.id == @following
-            client.log "#{@name} went away, can't watch :("
+            log "#{@name} went away, can't follow :("
             @following = nil
             @position = nil
             @follow_position = nil
@@ -60,8 +63,8 @@ module Golem
 
       def tick
         return if pending_moves.empty?
-        client.look_at(@position[0], @position[1] + 1, @position[2])
-        client.move_to(*pending_moves.shift) # sends move_look
+        state.look_at(@position[0], @position[1] + 1.5, @position[2])
+        move_to(*pending_moves.shift) # sends move_look
       end
 
       protected
@@ -71,14 +74,14 @@ module Golem
 
         new_pos = @position.map(&:floor).map(&:to_i)
         if @follow_position != new_pos
-          # client.log "player has moved to #{new_pos.inspect}"
+          # log "player has moved to #{new_pos.inspect}"
           @follow_position = new_pos
           available = map.available(*new_pos, :follow)
 
-          if !available.empty? && path = map.path(client.coords, available)
+          if !available.empty? && path = map.path(state.coords, available)
             @pending_moves = path
           else
-            client.log "can't follow #{@name}!"
+            log "can't follow #{@name}!"
           end
         end
 

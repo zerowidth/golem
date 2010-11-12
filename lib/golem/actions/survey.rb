@@ -8,16 +8,16 @@ module Golem
         @center = center
         @blueprint = Blueprint.new(blueprint_file, center)
 
-        puts "survey of #{blueprint_file} centered at #{center.inspect} -- #{blueprint.range.inspect}"
+        log "survey of #{blueprint_file} centered at #{center.inspect} -- #{blueprint.range.inspect}"
         survey = blueprint.survey_coords(map)
-        puts "#{survey.size} changes"
+        log "#{survey.size} changes"
         survey.each do |location, change|
           change = change.map {|c| BLOCKS[c] }
-          puts "  #{location.inspect}: #{change.inspect}"
+          log "  #{location.inspect}: #{change.inspect}"
         end
 
       rescue Errno::ENOENT => e
-        puts "#{e.message}"
+        log "#{e.message}"
       end
 
       def done?

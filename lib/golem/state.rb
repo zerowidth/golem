@@ -86,5 +86,37 @@ module Golem
       [position.x, position.y, position.z].map(&:floor).map(&:to_i)
     end
 
+    def look_at(x, y, z)
+      dist = Math.hypot(position.x.floor - x, position.z.floor - z)
+      position.pitch = dist == 0 ? 90 : Math.atan2(position.y - y + STANCE, dist).in_degrees
+      xpos = position.x.floor - x
+      zpos = position.z.floor - z
+      if xpos == 0 && zpos == 0
+        position.rotation = 180
+      else
+        position.rotation = Math.atan2(zpos, xpos).in_degrees + 90
+      end
+    end
+
+    def move_to(x, y, z)
+      position.x = x + 0.5
+      position.y = y
+      position.z = z + 0.5
+      position.stance = y + STANCE
+      position.flying = map.solid?(x, y - 1, z)
+    end
+
+    def look_values
+      [position.rotation, position.pitch, position.flying]
+    end
+
+    def move_look_values
+      [position.x, position.y, position.stance, position.z, position.rotation, position.pitch, position.flying]
+    end
+
+    def flying
+      position.flying
+    end
+
   end
 end

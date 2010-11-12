@@ -3,14 +3,14 @@ module Golem
     class Build < Action
 
       attr_reader :blueprint, :center
-      attr_reader :state
+      attr_reader :action
       attr_reader :actions
       attr_reader :pickups
 
       def setup(blueprint_file, center)
         @center = center
         @blueprint = Blueprint.new(blueprint_file, center)
-        @state = :dig # or :place
+        @action = :dig # or :place
         @actions = []
         @pickups = {}
         @done = false
@@ -25,7 +25,7 @@ module Golem
         # puts "---"
 
         range = blueprint.range
-        client.entities.each do |eid, entity|
+        state.entities.each do |eid, entity|
           pos = entity.position.map(&:to_i)
           next unless entity.type == :pickup && blueprint.includes?(*pos)
           pickups[eid] = pos
@@ -41,9 +41,9 @@ module Golem
           @actions = next_actions
 
           if actions.empty?
-            if state == :dig
+            if action == :dig
               puts "done clearing, now placing"
-              @state = :place
+              @action = :place
             else
               puts "all done! #{Time.now.to_s} - took #{(Time.now - @start_time)} seconds"
               @done = true
@@ -58,22 +58,22 @@ module Golem
             case action
             when :dig
               puts "dig #{coords[0]} #{coords[1]} #{coords[2]}"
-              client.dig(*coords)
+              dig(*coords)
             when :place
               puts "place #{coords[0]} #{coords[1]} #{coords[2]} #{coords[3]}"
-              client.place(*coords)
+              place(*coords)
             when :move
               @last_move = coords
               puts "move #{coords[0]} #{coords[1]} #{coords[2]}"
-              client.move_to(*coords)
+              move_to(*coords)
             when :path # move this path, then stop for this tick (pickups)
               coords.each do |where|
                 puts "move #{where[0]} #{where[1]} #{where[2]}"
-                client.move_to(*where)
+                move_to(*where)
               end
               break
             when :empty_inventory
-              client.send_empty_inventory
+              send_empty_inventory
             end
           end
 
@@ -85,6 +85,7 @@ module Golem
         when :player_move_look
           where = [packet.x, packet.y, packet.z]
           puts "crap! moved incorrectly! #{@last_move.inspect} --> #{where.inspect}"
+          @done = true
         when :pickup_spawn
           pos = [packet.x, packet.y, packet.z].map {|l| l/32 }
           if blueprint.includes?(*pos)
@@ -113,7 +114,7 @@ module Golem
       def next_actions
         if pickups.size >= 256
           cleanup_paths
-        elsif state == :dig
+        elsif action == :dig
           dig_actions
         else
           place_actions
@@ -124,7 +125,7 @@ module Golem
         survey = next_changes
 
         next_actions = []
-        current = client.coords
+        current = state.coords
 
         until survey.empty? || next_actions.size >= 100
           begin
@@ -153,7 +154,7 @@ module Golem
         survey = next_changes
 
         next_actions = []
-        current = client.coords
+        current = state.coords
 
         # if we're standing somewhere that needs to change, get out of the way
         if survey[current] || survey[[current[0], current[1] + 1, current[2]]]
@@ -187,7 +188,7 @@ module Golem
         actions = [[:empty_inventory, nil]]
 
         locations = pickups.values.uniq
-        current = client.coords
+        current = state.coords
 
         until locations.empty?
           begin
@@ -206,18 +207,18 @@ module Golem
       end
 
       def next_changes
-        survey = blueprint.survey_coords(map, state == :dig ? :top_down : :bottom_up, client.coords, 8)
+        survey = blueprint.survey_coords(map, action == :dig ? :top_down : :bottom_up, state.coords, 8)
         survey = changes_from_survey(survey)
 
         if survey.empty?
           puts "using bigger survey"
-          survey = blueprint.survey_coords(map, state == :dig ? :top_down : :bottom_up, client.coords, 16)
+          survey = blueprint.survey_coords(map, action == :dig ? :top_down : :bottom_up, state.coords, 16)
           survey = changes_from_survey(survey)
         end
 
         if survey.empty?
           puts "using full survey"
-          survey = blueprint.survey_coords(map, state == :dig ? :top_down : :bottom_up)
+          survey = blueprint.survey_coords(map, action == :dig ? :top_down : :bottom_up)
           survey = changes_from_survey(survey)
         end
 
@@ -226,7 +227,7 @@ module Golem
 
       def changes_from_survey(survey)
         survey.delete_if do |position, change|
-          needs_change = state == :dig ? needs_clearing?(position, change) : needs_placement?(position, change)
+          needs_change = action == :dig ? needs_clearing?(position, change) : needs_placement?(position, change)
           !needs_change || !map.available(*position, :next_to).any? { |l| map.allowed?(*l) }
         end
       end
@@ -244,6 +245,25 @@ module Golem
         lava, still_lava = CODES[:lava], CODES[:still_lava]
         water, still_water = CODES[:water], CODES[:still_water]
         [water, still_water, lava, still_lava, air].include?(from) && SOLID.include?(to)
+      end
+
+      def send_empty_inventory
+        # tell the server we have all the tools, but plenty of room for picking up things we just dug
+        send_packet :player_inventory, [-3, [nil, nil, nil, nil]]
+        send_packet :player_inventory, [-2, [nil, nil, nil, nil]]
+        send_packet :player_inventory, [-1, [
+          # main inventory slots:
+          [276, 1, 1], # sword
+          [277, 1, 1], # spade
+          [278, 1, 1], # pickaxe
+          [279, 1, 1], # axe
+          nil, nil, nil, nil,
+          [345, 1, 0], # compass
+
+          nil, nil, nil, nil, nil, nil, nil, nil, nil,
+          nil, nil, nil, nil, nil, nil, nil, nil, nil,
+          nil, nil, nil, nil, nil, nil, nil, nil, nil
+        ]]
       end
 
     end

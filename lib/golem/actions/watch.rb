@@ -2,12 +2,15 @@ module Golem
   module Actions
     class Watch < Action
 
-      def setup(name, entity_id, position)
+      def setup(name)
+        player = state.players[name]
         @name = name
-        @watching = entity_id
-        @position = position
+        if player
+          @watching = player.id
+          @position = player.position
+        end
 
-        client.log "watching #{name}" if @position
+        log "watching #{name}" if @position
 
         look
       end
@@ -17,7 +20,7 @@ module Golem
 
         when :named_entity_spawn
           if packet.name == @name
-            client.log "watching #{@name}"
+            log "watching #{@name}"
             @watching = packet.id
             @position = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
             look
@@ -38,7 +41,7 @@ module Golem
 
         when :destroy_entity
           if packet.id == @watching
-            client.log "#{@name} went away, can't watch :("
+            log "#{@name} went away, can't watch :("
             @watching = nil
             @position = nil
           end
@@ -55,11 +58,9 @@ module Golem
       protected
 
       def look
-
         return unless @watching && @position
-        client.look_at(@position[0], @position[1] + 1, @position[2])
-        client.send_look
-
+        state.look_at(@position[0], @position[1] + 1.5, @position[2])
+        send_packet :player_look, *state.look_values
       end
 
     end

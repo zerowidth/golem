@@ -2,17 +2,21 @@ module Golem
   module Actions
     class Come < Action
 
-      def setup(position)
-        position = position.map(&:to_i)
-        client.log "coming to #{position.inspect}"
+      def setup(name)
+        player = state.players[name]
 
-        available = map.available(*position, :follow)
-        if !available.empty? && path = map.path(client.coords, available)
-          path.each do |move|
-            client.move_to(*move)
+        if player
+          position = player.position.map(&:to_i)
+          log "coming to #{position.inspect}"
+
+          available = map.available(*position, :follow)
+          if !available.empty? && path = map.path(state.coords, available)
+            path.each { |move| move_to(*move) }
+          else
+            log "can't come!"
           end
         else
-          client.log "can't come!"
+          puts "can't find #{name}!"
         end
       end
 

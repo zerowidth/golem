@@ -7,24 +7,18 @@ module Golem
       @client = client
     end
 
-    # def post_init
-    #   puts "console ready"
-    # end
-
-    # def unbind
-    #   puts "console stopping"
-    # end
-
     def receive_data(data)
       command, args = data.strip.split(/\s+/, 2)
       args = (args || "").split(/\s+/)
 
       case command
 
-      # control commands
-
       when "q", "quit", "exit"
-        EM.stop
+        if client.respond_to?(:disconnect)
+          client.disconnect
+        else
+          EM.stop
+        end
         return
 
       when "d", "debug"
@@ -42,14 +36,8 @@ module Golem
       when "stop"
         client.stop
 
-      # simple / debugging commands
-
       when "p", "pos", "position"
-        if pos = client.position
-          puts "position: #{client.coords.inspect} #{pos.inspect}"
-        else
-          puts "no position yet?"
-        end
+        client.position
 
       when "m", "move"
         if args.size == 3
@@ -62,15 +50,7 @@ module Golem
       when "path"
         if args.size == 3
           x, y, z = args.map(&:to_i)
-
-          puts "path from #{client.coords.inspect} to #{[x, y, z].inspect}:"
-
-          if path = client.path_to(x, y, z)
-            path.each {|p| puts "  #{p.inspect}" }
-          else
-            puts "  no path found"
-          end
-
+          client.path_to(x, y, z)
         else
           puts "path x y z"
         end
@@ -78,7 +58,7 @@ module Golem
       when "b", "block"
         if args.size == 3
           x, y, z = args.map(&:to_i)
-          puts "block at #{[x, y, z].inspect}: #{client.block_at(x, y, z).inspect}"
+          client.block_at(x, y, z)
         else
           puts "block x y z"
         end
@@ -113,8 +93,6 @@ module Golem
           puts "place <x> <y> <z> <code>"
         end
 
-      # complex commands:
-
       when "watch"
         if player = args.first
           client.watch(player)
@@ -122,11 +100,11 @@ module Golem
           puts "watch <player>"
         end
 
-      when "here"
+      when "come"
         if player = args.first
           client.come_to(player)
         else
-          puts "here <player> -- move to where the player is"
+          puts "come <player> -- move to where the player is"
         end
 
       when "follow"
@@ -136,32 +114,33 @@ module Golem
           puts "follow <player>"
         end
 
-      when "loadout"
-        # tell the server that we have all the tools, and we're full of dirt too so we can't
-        # pick anything else up.
+      # when "loadout"
+      #   # tell the server that we have all the tools, and we're full of dirt too so we can't
+      #   # pick anything else up.
 
-        client.send_packet :player_inventory, [-3, [nil, nil, nil, nil]]
-        client.send_packet :player_inventory, [-2, [nil, nil, nil, nil]]
-        client.send_packet :player_inventory, [-1, [
-          # main inventory slots:
-          [276, 1, 1], # sword
-          [277, 1, 1], # spade
-          [278, 1, 1], # pickaxe
-          [279, 1, 1], # axe
-          [3, 64, 0],
-          [3, 64, 0],
-          [3, 64, 0],
-          [3, 64, 0],
-          [345, 1, 0], # compass
+      #   client.send_packet :player_inventory, [-3, [nil, nil, nil, nil]]
+      #   client.send_packet :player_inventory, [-2, [nil, nil, nil, nil]]
+      #   client.send_packet :player_inventory, [-1, [
+      #     # main inventory slots:
+      #     [276, 1, 1], # sword
+      #     [277, 1, 1], # spade
+      #     [278, 1, 1], # pickaxe
+      #     [279, 1, 1], # axe
+      #     [3, 64, 0],
+      #     [3, 64, 0],
+      #     [3, 64, 0],
+      #     [3, 64, 0],
+      #     [345, 1, 0], # compass
 
-          # full of dirt!
-          [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0],
-          [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0],
-          [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0],
-        ]]
+      #     # full of dirt!
+      #     [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0],
+      #     [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0],
+      #     [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0], [3, 64, 0],
+      #   ]]
 
-      when "empty"
-        client.send_empty_inventory
+      # when "empty"
+      #   client.send_empty_inventory
+
       when "survey"
         if blueprint = args.shift
           if args.size == 3

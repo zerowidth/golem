@@ -18,11 +18,11 @@ module Golem
         end
 
         next_block
-        @state = :place
+        @action = :place
 
         @counts = Hash.new(0)
 
-        @pos = client.coords
+        @pos = state.coords
         pos[0] += 1
 
       end
@@ -33,23 +33,23 @@ module Golem
 
       def dig(count)
         x, y, z = pos
-        client.equip map.tool_for(x, y, z)
+        equip map.tool_for(x, y, z)
 
-        client.send_packet :block_dig, 0, x, y, z, 4
-        client.send_packet :arm_animation, 0, true
+        send_packet :block_dig, 0, x, y, z, 4
+        send_packet :arm_animation, 0, true
 
         count.times do
-          client.send_packet :block_dig, 1, x, y, z, 4
+          send_packet :block_dig, 1, x, y, z, 4
         end
 
-        client.send_packet :block_dig, 3, x, y, z, 4
-        client.send_packet :block_dig, 2, 0, 0, 0, 0
+        send_packet :block_dig, 3, x, y, z, 4
+        send_packet :block_dig, 2, 0, 0, 0, 0
       end
 
       def place(block)
-        client.equip block
+        equip block
         x, y, z = pos
-        client.send_packet :place, code, x, y - 1, z, 1
+        send_packet :place, block, x, y - 1, z, 1
         sleep 0.1
       end
 
@@ -60,17 +60,17 @@ module Golem
       def tick
         x, y, z = pos
 
-        case @state
+        case @action
         when :place
           block = current_block[0]
           puts "placing #{block}"
 
           place block
 
-          @state = :dig
+          @action = :dig
 
-          client.look_at(*pos)
-          client.send_look
+          state.look_at(*pos)
+          send_look
 
         when :dig
           return if !SOLID.include?(map[x, y, z])
@@ -81,14 +81,14 @@ module Golem
           dig n
 
           @wait = 0
-          @state = :wait
+          @action = :wait
 
         when :wait
           @wait += 1
           print "."
           if @wait == 2
             print " "
-            @state = :test
+            @action = :test
           end
 
         when :test
@@ -98,23 +98,23 @@ module Golem
             if max - min <= 1
               puts "broke at #{max}"
               next_block
-              @state = :place
+              @action = :place
             else
               current_block[2] = (max - min) / 2 + min
               puts ":)"
               place block
-              @state = :dig
+              @action = :dig
             end
           else
             if max - min <= 1
               puts "broke at #{max}"
               dig 3000
               next_block
-              @state = :place
+              @action = :place
             else
               current_block[1] = (max - min) / 2 + min
               puts ":("
-              @state = :dig
+              @action = :dig
             end
           end
 
