@@ -63,7 +63,7 @@ module Golem
     end
 
     def stop
-      @current_action = nil
+      clear_current_action
     end
 
     def send_client_packet(kind, *values)
@@ -80,7 +80,7 @@ module Golem
     def current_action_tick
       if current_action
         if current_action.done?
-          @current_action = nil
+          clear_current_action
         else
           current_action.tick
           send_pending_action_packets
@@ -92,6 +92,10 @@ module Golem
       current_action.packets do |type, values|
         send_client_packet(type, *values)
       end
+    end
+
+    def clear_current_action
+      @current_action = nil
     end
 
     def say(msg)
