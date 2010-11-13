@@ -88,11 +88,11 @@ module Golem
 
     def look_at(x, y, z)
       dist = Math.hypot(position.x.floor - x, position.z.floor - z)
-      position.pitch = dist == 0 ? 90 : Math.atan2(position.y - y + STANCE, dist).in_degrees
+      position.pitch = Math.atan2(position.y - y + STANCE, dist).in_degrees
       xpos = position.x.floor - x
       zpos = position.z.floor - z
       if xpos == 0 && zpos == 0
-        position.rotation = 180
+        position.rotation = 0
       else
         position.rotation = Math.atan2(zpos, xpos).in_degrees + 90
       end
