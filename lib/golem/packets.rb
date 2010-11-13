@@ -69,6 +69,11 @@ module Golem
       int :z
     end
 
+    client_packet :use_entity, 0x07 do
+      int :player_id
+      int :entity_id
+    end
+
     client_packet :flying_ack, 0x0a do
       bool :flying
     end
@@ -221,10 +226,11 @@ module Golem
       byte :pitch
     end
 
-    server_packet :unknown, 0x1c do
+    server_packet :entity_velocity, 0x1c do
       int :id
-      int :foo
-      short :bar
+      short :x
+      short :y
+      short :z
     end
 
     server_packet :destroy_entity, 0x1d do
@@ -264,6 +270,11 @@ module Golem
       int :z
       byte :rotation
       byte :pitch
+    end
+
+    server_packet :attach_entity, 0x27 do
+      int :entity_id
+      int :vehicle_id
     end
 
     server_packet :pre_chunk, 0x32 do
