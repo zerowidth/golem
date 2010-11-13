@@ -172,6 +172,9 @@ module Golem
       when "digtest"
         client.action Actions::DigTest
 
+      when "players"
+        client.list_players
+
       else
         puts "unrecognized"
       end

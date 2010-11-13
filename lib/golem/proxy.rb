@@ -91,6 +91,8 @@ module Golem
       when /\/me/
         @nohands = false
         tell_client "back in control"
+      when /\/stop/
+        clear_current_action
       else
         return false
       end

@@ -152,5 +152,9 @@ module Golem
       action Actions::Build, blueprint, where
     end
 
+    def list_players
+      action Actions::ListPlayers
+    end
+
   end
 end
