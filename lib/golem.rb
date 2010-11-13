@@ -43,6 +43,7 @@ module Golem
     actions/build
     actions/dig_test
     actions/list_players
+    actions/fly_to
 
   ).each do |lib|
     require "golem/#{lib}"

@@ -47,6 +47,14 @@ module Golem
           puts "move x y z"
         end
 
+      when "fly"
+        if args.size == 3
+          x, y, z = args.map(&:to_i)
+          client.fly_to(x, y, z)
+        else
+          puts "fly x y z"
+        end
+
       when "path"
         if args.size == 3
           x, y, z = args.map(&:to_i)

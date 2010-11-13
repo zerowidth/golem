@@ -123,6 +123,10 @@ module Golem
       send_server_packet :chat, "<proxy> #{msg}"
     end
 
+    def fly_to(x, y, z)
+      action Actions::FlyTo, x, y, z
+    end
+
     def reset_client_position
       pos = state.position
       send_server_packet :player_position, pos.x, pos.stance, pos.y, pos.z, pos.flying
