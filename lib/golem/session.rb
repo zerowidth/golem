@@ -94,5 +94,59 @@ module Golem
       end
     end
 
+    def say(msg)
+      action Actions::Simple, :say, msg
+    end
+
+    def position
+      action Actions::Simple, :position
+    end
+
+    def block_at(x, y, z)
+      action Actions::Simple, :block, x, y, z
+    end
+
+    def move_to(x, y, z)
+      action Actions::Simple, :move, x, y, z
+    end
+
+    def path_to(x, y, z)
+      action Actions::Simple, :path, x, y, z
+    end
+
+    def dig(x, y, z)
+      action Actions::Simple, :dig, x, y, z
+    end
+
+    def equip(code)
+      action Actions::Simple, :equip, code
+    end
+
+    def place(x, y, z, code)
+      action Actions::Simple, :place, x, y, z, code
+    end
+
+    def watch(player_name)
+      action Actions::Watch, player_name
+    end
+
+    def come_to(player_name)
+      action Actions::Come, player_name
+    end
+
+    def follow(player_name)
+      action Actions::Follow, player_name
+    end
+
+    def survey(blueprint, center = nil)
+      where = center || state.coords
+      action Actions::Survey, blueprint, where
+    end
+
+    def build(blueprint, center = nil)
+      where = center || coords
+      action Actions::Build, blueprint, where
+    end
+
   end
 end
