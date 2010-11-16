@@ -47,6 +47,9 @@ module Golem
       when :multi_block_change
         send_client_packet :flying_ack, state.flying
 
+      when :map_chunk
+        send_client_packet :flying_ack, state.flying
+
       end
 
     end
