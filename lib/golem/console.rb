@@ -101,6 +101,15 @@ module Golem
           puts "place <x> <y> <z> <code>"
         end
 
+      when "drop"
+        if args.size > 0
+          code, count = args.map(&:to_i)
+          count ||= 1
+          client.drop code, count
+        else
+          puts "drop <code> [count=1]"
+        end
+
       when "watch"
         if player = args.first
           client.watch(player)

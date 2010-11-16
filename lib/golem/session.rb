@@ -130,6 +130,10 @@ module Golem
       action Actions::Simple, :place, x, y, z, code
     end
 
+    def drop(code, count=1)
+      action Actions::Simple, :drop, code, count
+    end
+
     def watch(player_name)
       action Actions::Watch, player_name
     end

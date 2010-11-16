@@ -105,6 +105,12 @@ module Golem
       send_packet :place, code, x, y - 1, z, 1
     end
 
+    def drop(code, count=1)
+      eid = state.entities.keys.max + 1
+      x, y, z = state.coords
+      send_packet :pickup_spawn, eid, code, count, x * 32, y * 32, z * 32, 0, 0, 0
+    end
+
     def log(msg)
       puts Time.now.strftime("%F %H:%M:%S.%3N ") << msg
     end
