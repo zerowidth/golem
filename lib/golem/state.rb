@@ -38,24 +38,25 @@ module Golem
         entities[packet.id] = Entity.new(packet.id, [packet.x, packet.y, packet.z], nil)
 
       when :named_entity_spawn
-        pos = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
+        pos = [packet.x, packet.y, packet.z]
         entity = Entity.new packet.id, pos, :player, packet.name
         entities[packet.id] = players[packet.name] = entity
 
       when :pickup_spawn
-        pos = [packet.x, packet.y, packet.z].map {|l| l/32 } # absolute positions
+        pos = [packet.x, packet.y, packet.z]
+        # puts "pickup: #{packet.id} #{pos} #{pos.map { |v| v / 32 }}"
         entities[packet.id] = Entity.new packet.id, pos, :pickup
 
       when :entity_move, :entity_move_look
         if entity = entities[packet.id]
-          deltas = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
+          deltas = [packet.x, packet.y, packet.z]
           new_pos = entity.position.map.with_index { |v, i| v + deltas[i] }
           entity.position = new_pos
         end
 
       when :entity_teleport
         if entities[packet.id]
-          entities[packet.id].position = [packet.x, packet.y, packet.z].map { |v| v / 32 }
+          entities[packet.id].position = [packet.x, packet.y, packet.z]
         end
 
       when :destroy_entity

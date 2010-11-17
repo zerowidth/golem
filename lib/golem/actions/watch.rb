@@ -7,7 +7,7 @@ module Golem
         @name = name
         if player
           @watching = player.id
-          @position = player.position
+          @position = player.position.map { |v| v / 32 }
         end
 
         log "watching #{name}" if @position

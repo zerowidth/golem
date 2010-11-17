@@ -6,7 +6,7 @@ module Golem
         player = state.players[name]
 
         if player
-          position = player.position.map(&:to_i)
+          position = player.position.map { |v| v/32 }
           log "coming to #{position.inspect}"
 
           available = map.available(*position, :follow)

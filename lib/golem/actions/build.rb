@@ -27,7 +27,7 @@ module Golem
         range = blueprint.range
         state.entities.each do |eid, entity|
           pos = entity.position.map(&:to_i)
-          next unless entity.type == :pickup && blueprint.includes?(*pos)
+          next unless entity.type == :pickup && blueprint.includes?(*pos.map { |v| v / 32 })
           pickups[eid] = pos
         end
 
@@ -87,18 +87,18 @@ module Golem
           puts "crap! moved incorrectly! #{@last_move.inspect} --> #{where.inspect}"
           @done = true
         when :pickup_spawn
-          pos = [packet.x, packet.y, packet.z].map {|l| l/32 }
-          if blueprint.includes?(*pos)
+          pos = [packet.x, packet.y, packet.z]
+          if blueprint.includes?(*pos.map { |v| v / 32 })
             pickups[packet.id] = pos
           end
         when :entity_move
           if pos = pickups[packet.id]
-            deltas = [packet.x, packet.y, packet.z].map { |v| v.to_f / 32 }
-            pickups[packet.id] = pos.map.with_index { |v, i| v + deltas[i] }.map(&:to_i)
+            deltas = [packet.x, packet.y, packet.z]
+            pickups[packet.id] = pos.map.with_index { |v, i| v + deltas[i] }
           end
         when :entity_teleport
           if pos = pickups[packet.id]
-            pickups[packet.id] = [packet.x, packet.y, packet.z].map { |v| v / 32 }.map(&:to_i)
+            pickups[packet.id] = [packet.x, packet.y, packet.z]
           end
         when :destroy_entity
           pickups.delete packet.id
@@ -112,8 +112,9 @@ module Golem
       protected
 
       def next_actions
-        if pickups.size >= 256
-          cleanup_paths
+        log "-- #{action} --"
+        if action == :cleanup
+          cleanup_actions
         elsif action == :dig
           dig_actions
         else
@@ -121,7 +122,26 @@ module Golem
         end
       end
 
+      def cleanup_actions
+        locations = pickups.values.map { |pos| pos.map { |v| v / 32 } }.uniq
+
+        begin
+          path_to_nearest = Timeout.timeout(5) { map.path(state.coords, locations) }
+        rescue Timeout::Error
+          log "no path!"
+          path_to_nearest = nil
+        end
+
+        return path_to_nearest ? [[:path, path_to_nearest]] : []
+      end
+
       def dig_actions
+        if pickups.size >= 200
+          log "time to clean up!"
+          @action = :cleanup
+          return [[:empty_inventory, nil]]
+        end
+
         survey = next_changes
 
         next_actions = []
@@ -183,27 +203,7 @@ module Golem
         next_actions
       end
 
-      def cleanup_paths
-        puts "time for cleanup!"
-        actions = [[:empty_inventory, nil]]
-
-        locations = pickups.values.uniq
-        current = state.coords
-
-        until locations.empty?
-          begin
-            path_to_nearest = Timeout.timeout(5) { map.path(current, locations) }
-          rescue Timeout::Error
-            path_to_nearest = nil
-          end
-          break unless path_to_nearest && !path_to_nearest.empty?
-
-          actions << [:path, path_to_nearest]
-          current = path_to_nearest.last
-          locations.delete current
         end
-
-        actions
       end
 
       def next_changes

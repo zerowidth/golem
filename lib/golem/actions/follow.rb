@@ -9,7 +9,7 @@ module Golem
 
         if player = state.players[name]
           @following = player.id
-          @position = player.position
+          @position = player.position.map { |v| v / 32 }
           @follow_position = @position ? @position.map(&:to_i) : nil
         end
 
