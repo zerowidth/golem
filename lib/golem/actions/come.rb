@@ -16,7 +16,7 @@ module Golem
             log "can't come!"
           end
         else
-          puts "can't find #{name}!"
+          log "can't find #{name}!"
         end
       end
 

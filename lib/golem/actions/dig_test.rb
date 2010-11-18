@@ -63,7 +63,7 @@ module Golem
         case @action
         when :place
           block = current_block[0]
-          puts "placing #{block}"
+          log "placing #{block}"
 
           place block
 
@@ -96,24 +96,24 @@ module Golem
 
           if map[*pos] == CODES[:air]
             if max - min <= 1
-              puts "broke at #{max}"
+              log "broke at #{max}"
               next_block
               @action = :place
             else
               current_block[2] = (max - min) / 2 + min
-              puts ":)"
+              log ":)"
               place block
               @action = :dig
             end
           else
             if max - min <= 1
-              puts "broke at #{max}"
+              log "broke at #{max}"
               dig 3000
               next_block
               @action = :place
             else
               current_block[1] = (max - min) / 2 + min
-              puts ":("
+              log ":("
               @action = :dig
             end
           end

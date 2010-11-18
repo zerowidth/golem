@@ -16,13 +16,13 @@ module Golem
         @done = false
         @start_time = Time.now
 
-        puts "building #{blueprint_file} centered at #{center.inspect} -- #{blueprint.range.inspect}"
-        puts "starting at #{Time.now.to_s}"
+        log "building #{blueprint_file} centered at #{center.inspect} -- #{blueprint.range.inspect}"
+        log "starting at #{Time.now.to_s}"
         # blueprint.survey_coords(map, :top_down).each do |location, change|
         #   change = change.map {|c| BLOCKS[c] }
-        #   puts "  #{location.inspect}: #{change.inspect}"
+        #   log "  #{location.inspect}: #{change.inspect}"
         # end
-        # puts "---"
+        # log "---"
 
         range = blueprint.range
         state.entities.each do |eid, entity|
@@ -30,22 +30,24 @@ module Golem
           next unless entity.type == :pickup && blueprint.includes?(*pos.map { |v| v / 32 })
           pickups[eid] = pos
         end
+        log "tracking #{pickups.size} pickups already"
 
       rescue Errno::ENOENT => e
         @done = true
-        puts "#{e.message}"
+        log "#{e.message}"
       end
 
       def tick
+        log "-- #{action} --"
         if actions.empty?
           @actions = next_actions
 
           if actions.empty?
             if action == :dig
-              puts "done clearing, now placing"
+              log "done cleaning up, now digging"
               @action = :place
             else
-              puts "all done! #{Time.now.to_s} - took #{(Time.now - @start_time)} seconds"
+              log "all done! #{Time.now.to_s} - took #{(Time.now - @start_time)} seconds"
               @done = true
             end
           end
@@ -60,7 +62,7 @@ module Golem
               puts "dig #{coords[0]} #{coords[1]} #{coords[2]}"
               dig(*coords)
             when :place
-              puts "place #{coords[0]} #{coords[1]} #{coords[2]} #{coords[3]}"
+              log "place #{coords[0]} #{coords[1]} #{coords[2]} #{coords[3]}"
               place(*coords)
             when :move
               @last_move = coords
@@ -68,7 +70,7 @@ module Golem
               move_to(*coords)
             when :path # move this path, then stop for this tick (pickups)
               coords.each do |where|
-                puts "move #{where[0]} #{where[1]} #{where[2]}"
+                log "move #{where[0]} #{where[1]} #{where[2]}"
                 move_to(*where)
               end
               break
@@ -84,7 +86,7 @@ module Golem
         case packet.class.kind
         when :player_move_look
           where = [packet.x, packet.y, packet.z]
-          puts "crap! moved incorrectly! #{@last_move.inspect} --> #{where.inspect}"
+          log "moved incorrectly, stopping: #{@last_move.inspect} --> #{where.inspect}"
           @done = true
         when :pickup_spawn
           pos = [packet.x, packet.y, packet.z]
@@ -112,7 +114,6 @@ module Golem
       protected
 
       def next_actions
-        log "-- #{action} --"
         if action == :cleanup
           cleanup_actions
         elsif action == :dig
@@ -178,19 +179,19 @@ module Golem
 
         # if we're standing somewhere that needs to change, get out of the way
         if survey[current] || survey[[current[0], current[1] + 1, current[2]]]
-          puts "moving out of the way, gotta put blocks here..."
+          log "moving out of the way, gotta put blocks here..."
           begin
             path_to_nearest = Timeout.timeout(10) { map.path(current, survey.keys, :away_from) }
           rescue Timeout::Error
-            puts "hmm, couldn't move? i might be stuck!"
+            log "hmm, couldn't move? i might be stuck!"
             path_to_nearest = nil
           end
 
           if path_to_nearest
-            puts "path: #{path_to_nearest.inspect}"
+            log "path: #{path_to_nearest.inspect}"
             path_to_nearest.each { |p| next_actions << [:move, p] }
           else
-            puts "wtf? couldn't move out of the way..."
+            log "wtf? couldn't move out of the way..."
           end
         end
 
@@ -211,13 +212,13 @@ module Golem
         survey = changes_from_survey(survey)
 
         if survey.empty?
-          puts "using bigger survey"
+          log "using larger survey"
           survey = blueprint.survey_coords(map, action == :dig ? :top_down : :bottom_up, state.coords, 16)
           survey = changes_from_survey(survey)
         end
 
         if survey.empty?
-          puts "using full survey"
+          log "using full survey"
           survey = blueprint.survey_coords(map, action == :dig ? :top_down : :bottom_up)
           survey = changes_from_survey(survey)
         end

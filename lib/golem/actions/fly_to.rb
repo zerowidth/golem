@@ -2,7 +2,7 @@ module Golem
   module Actions
     class FlyTo < Action
       def setup(x, y, z)
-        puts "flying to #{[x, y, z].inspect}"
+        log "flying to #{[x, y, z].inspect}"
         current = state.coords
 
         current[1] = 127
