@@ -57,6 +57,12 @@ module Golem
     def handle(packet)
       if packet.kind == :update_time && @time
         send_server_packet :update_time, @time
+      elsif packet.kind == :add_to_inventory && nohands? && current_action && !current_action.done?
+        if COMMON.include?(packet.type)
+          # ignore it, let the proxy swallow inventory adds while e.g. building
+        else
+          client.send_data packet.raw
+        end
       else
         client.send_data packet.raw
       end
