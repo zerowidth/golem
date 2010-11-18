@@ -152,7 +152,7 @@ module Golem
     end
 
     def build(blueprint, center = nil)
-      where = center || coords
+      where = center || state.coords
       action Actions::Build, blueprint, where
     end
 
