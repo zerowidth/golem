@@ -19,6 +19,12 @@ module Golem
       @server_parser.parse(data).each do |packet|
         debug "server --> #{packet.inspect}"
         state.update packet
+
+        if packet.kind == :disconnect
+          log "server disconnect: #{packet.message}"
+          EM.stop
+        end
+
         handle packet
 
         if current_action
@@ -70,7 +76,13 @@ module Golem
       packet_class = Packet.client_packets_by_kind[kind] or raise ArgumentError, "unknown packet type #{kind.inspect}"
       packet = packet_class.new(*values)
       debug "<-- server #{packet.inspect}"
-      send_data packet.encode
+      begin
+        send_data packet.encode
+      rescue => e
+        puts "error while sending packet"
+        puts packet.inspect
+        raise
+      end
     end
 
     def map
