@@ -1,7 +1,7 @@
 module Golem
   class Map
 
-    MAX_PATH_SIZE = 64 # even this is a lot if the end goal is unavailable...
+    MAX_PATH_SIZE = 256
 
     NORTH = [-1, 0, 0]
     EAST  = [0, 0, -1]
@@ -156,7 +156,14 @@ module Golem
         test = pos
         transform.each {|xform| test = combine(test, xform) }
         if mode == :build
-          list << test
+          # digging upward so check for sand/gravel
+          unless y == (test[1] - 2) &&
+            [12, 13].include?(self[test[0], test[1] + 1, test[2]])
+            [12, 13].include?(self[*test])
+            list << test
+          # else
+            # puts "skipping #{test.inspect}, it's got gravel/sand above"
+          end
         else
           list << test if allowed?(*test, allow_flight, ignore)
         end
@@ -169,7 +176,9 @@ module Golem
       block = self[x, y, z]
       above = y == 127 ? CODES[:air] : self[x, y + 1, z]
       below = self[x, y - 1, z]
-      open = !SOLID.include?(block) && !SOLID.include?(above) && !ignore[[x, y, z]] && !ignore[[x, y + 1, z]]
+      # check for full x y z coord as well as x, z column
+      ignored = ignore[[x,y,z]] || ignore[[x, y + 1, z]] || ignore[[x, z]]
+      open = !SOLID.include?(block) && !SOLID.include?(above) && !ignored
       if allow_flight
         open
       else

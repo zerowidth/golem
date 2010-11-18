@@ -159,27 +159,34 @@ module Golem
       0.upto(img.width - 1) do |img_x|
         0.upto(img.height - 1) do |img_y|
           color = ChunkyPNG::Color.to_truecolor_alpha_bytes(img[img_x, img_y])
-          block = case color
-          when [0, 0, 0, 0], [255, 255, 255, 0], [121, 0, 0, 255]
-            # the red color is from the plan files, easier than toggling layers for transparency
-            nil
-          when [255, 255, 255, 255] # white
-            :stone
-          when [128, 128, 128, 255] # mid-grey
-            :cobble
-          when [0, 255, 255, 255] # cyan
-            :glass
-          when [64, 0, 64, 255] # purple
-            :obsidian
-          when [255, 255, 0, 255] # yellow
-            :lightstone
-          when [255, 128, 0, 255] # orange
-            :still_lava
-          when [0, 0, 0, 255] # black
-            :air
-
+          if color[3] == 0
+            bock = nil
           else
-            raise "unknown color in #{fn} at #{[img_x,img_y].inspect} #{color.inspect}"
+            block = case color
+            when [121, 0, 0, 255]
+              # the red color is from the plan files, easier than toggling layers for transparency
+              nil
+            when [255, 255, 255, 255] # white
+              :stone
+            when [128, 128, 128, 255] # mid-grey
+              :cobble
+            when [0, 255, 255, 255] # cyan
+              :glass
+            when [64, 0, 64, 255] # purple
+              :obsidian
+            when [255, 255, 0, 255] # yellow
+              :lightstone
+            when [255, 128, 0, 255] # orange
+              :still_lava
+            when [0, 0, 255, 255] # blue
+              :water
+            when [64, 128, 64, 255]
+              :grass
+            when [0, 0, 0, 255] # black
+              :air
+            else
+              raise "unknown color in #{fn} at #{[img_x,img_y].inspect} #{color.inspect}"
+            end
           end
 
           blocks << CODES[block]

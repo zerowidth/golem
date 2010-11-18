@@ -106,9 +106,8 @@ module Golem
     :cloth,
     :gold_block,
     :iron_block,
-    # require special-casing
-    # :double_step,
-    # :step,
+    :double_step,
+    :step,
     :brick,
     :tnt,
     :bookcase,
@@ -116,7 +115,7 @@ module Golem
     :obsidian,
     :fire,
     :mob_spawner,
-    # :wood_stairs,
+    :wood_stairs,
     :chest,
     :diamond_ore,
     :diamond_block,
@@ -127,17 +126,17 @@ module Golem
     :sign_post,
     :wood_door,
     # :minecart_tracks,
-    # :cobble_stairs,
+    :cobble_stairs,
     :iron_door,
     :redstone_ore,
     :glowing_redstone_ore,
     :snow,
-    # :ice,
+    :ice,
     :snow_block,
     :cactus,
     :clay,
     :jukebox,
-    # special case:
+    # special case needed for fence
     :fence,
     :bloodstone,
     :slow_sand,
@@ -200,5 +199,12 @@ module Golem
       :lightstone => 46
     }.map { |c, d| [CODES[c], d] }
   ]
+
+  COMMON = [
+    :cobble,
+    :dirt,
+    :gravel,
+    :sand
+  ].map { |c| CODES[c] }
 
 end

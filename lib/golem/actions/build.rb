@@ -15,6 +15,7 @@ module Golem
         @pickups = {}
         @done = false
         @start_time = Time.now
+        @falling_columns = {}
 
         log "building #{blueprint_file} centered at #{center.inspect} -- #{blueprint.range.inspect}"
         log "starting at #{Time.now.to_s}"
@@ -40,11 +41,15 @@ module Golem
       def tick
         log "-- #{action} --"
         if actions.empty?
+          expire_falling_columns
           @actions = next_actions
 
           if actions.empty?
-            if action == :dig
+            if action == :cleanup
               log "done cleaning up, now digging"
+              @action = :dig
+            elsif action == :dig
+              log "done clearing, now placing"
               @action = :place
             else
               log "all done! #{Time.now.to_s} - took #{(Time.now - @start_time)} seconds"
@@ -59,16 +64,34 @@ module Golem
             action, coords = actions.shift
             case action
             when :dig
-              puts "dig #{coords[0]} #{coords[1]} #{coords[2]}"
-              dig(*coords)
+              if @falling_columns[[coords[0], coords[2]]]
+                log "dig #{coords[0]} #{coords[1]} #{coords[2]} (skipped, unsafe)"
+              else
+                above = coords.dup
+                above[1] += 1
+                if [13, 14].include?(map[*above])
+                  @falling_columns[[coords[0], coords[2]]] = Time.now.to_i
+                  log "dig #{coords[0]} #{coords[1]} #{coords[2]} (unsafe)"
+                else
+                  log "dig #{coords[0]} #{coords[1]} #{coords[2]}"
+                end
+                dig(*coords)
+              end
+
             when :place
               log "place #{coords[0]} #{coords[1]} #{coords[2]} #{coords[3]}"
               place(*coords)
             when :move
               @last_move = coords
-              puts "move #{coords[0]} #{coords[1]} #{coords[2]}"
-              move_to(*coords)
-            when :path # move this path, then stop for this tick (pickups)
+              if @falling_columns[[coords[0], coords[2]]]
+                log "move #{coords[0]} #{coords[1]} #{coords[2]} (skipped, unsafe)"
+                actions.clear # skipping unsafe moves invalidates all subsequent pathfinding
+                break
+              else
+                log "move #{coords[0]} #{coords[1]} #{coords[2]}"
+                move_to(*coords)
+              end
+            when :path # move this path, then stop for this tick (for pickups)
               coords.each do |where|
                 log "move #{where[0]} #{where[1]} #{where[2]}"
                 move_to(*where)
@@ -104,6 +127,8 @@ module Golem
           end
         when :destroy_entity
           pickups.delete packet.id
+        when :add_to_inventory
+          send_empty_inventory
         end
       end
 
@@ -125,9 +150,10 @@ module Golem
 
       def cleanup_actions
         locations = pickups.values.map { |pos| pos.map { |v| v / 32 } }.uniq
+        locations.delete state.coords # move somewhere other than here, always
 
         begin
-          path_to_nearest = Timeout.timeout(5) { map.path(state.coords, locations) }
+          path_to_nearest = Timeout.timeout(5) { map.path(state.coords, locations, :move_to, @falling_columns) }
         rescue Timeout::Error
           log "no path!"
           path_to_nearest = nil
@@ -150,7 +176,7 @@ module Golem
 
         until survey.empty? || next_actions.size >= 100
           begin
-            path_to_nearest = Timeout.timeout(10) { map.path(current, survey.keys, :next_to) }
+            path_to_nearest = Timeout.timeout(10) { map.path(current, survey.keys, :next_to, @falling_columns) }
           rescue Timeout::Error
             path_to_nearest = nil
           end
@@ -181,7 +207,7 @@ module Golem
         if survey[current] || survey[[current[0], current[1] + 1, current[2]]]
           log "moving out of the way, gotta put blocks here..."
           begin
-            path_to_nearest = Timeout.timeout(10) { map.path(current, survey.keys, :away_from) }
+            path_to_nearest = Timeout.timeout(10) { map.path(current, survey.keys, :away_from, @falling_columns) }
           rescue Timeout::Error
             log "hmm, couldn't move? i might be stuck!"
             path_to_nearest = nil
@@ -204,6 +230,10 @@ module Golem
         next_actions
       end
 
+      def expire_falling_columns
+        now = Time.now.to_i
+        @falling_columns.keys.select { |k| now - @falling_columns[k] > 10 }.map do |key|
+          @falling_columns.delete key
         end
       end
 
