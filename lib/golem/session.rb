@@ -122,6 +122,10 @@ module Golem
       action Actions::Simple, :block, x, y, z
     end
 
+    def number_of_chunks
+      puts "map has #{map.number_of_chunks} chunks loaded"
+    end
+
     def move_to(x, y, z)
       action Actions::Simple, :move, x, y, z
     end

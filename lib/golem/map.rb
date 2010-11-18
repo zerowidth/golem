@@ -20,6 +20,10 @@ module Golem
       @chunks[x / 16] && @chunks[x / 16][z / 16]
     end
 
+    def number_of_chunks
+      @chunks.values.inject(0) {|sum, list| sum + list.keys.size }
+    end
+
     def [](x, y, z)
       c = self.chunk(x, z)
       block = c && c[x, y, z]

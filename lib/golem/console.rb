@@ -71,6 +71,9 @@ module Golem
           puts "block x y z"
         end
 
+      when "chunks"
+        client.number_of_chunks
+
       when "y", "say"
         if args.empty?
           puts "say <message>"
