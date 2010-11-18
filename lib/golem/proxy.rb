@@ -15,6 +15,7 @@ module Golem
       @time = nil
       @nohands = false
       @needs_reset = false
+      @hide = false
 
       EM.add_periodic_timer(0.1) do
         if needs_reset
@@ -24,12 +25,33 @@ module Golem
       end
 
       EM.add_periodic_timer(0.25) do
-        current_action_tick
+        next unless current_action
+        if hide?
+          if state.players.size > 0
+            if nohands?
+              log "hiding from #{state.players.keys.join(", ")}"
+              @nohands = false
+            end
+          elsif state.players.size == 0
+            if nohands?
+              current_action_tick
+            else
+              log "all clear, back to work!"
+              @nohands = true
+            end
+          end
+        else
+          current_action_tick
+        end
       end
     end
 
     def nohands?
       @nohands
+    end
+
+    def hide?
+      @hide
     end
 
     def handle(packet)
@@ -91,6 +113,12 @@ module Golem
       when /\/me/
         @nohands = false
         tell_client "back in control"
+      when /hide/
+        tell_client "working in secret"
+        @hide = true
+      when /nohide/
+        tell_client "working in public"
+        @hide = false
       when /\/stop/
         clear_current_action
       else
