@@ -4,6 +4,7 @@ module Golem
     attr_reader :client
     attr_reader :client_parser
     attr_reader :reset_timer, :needs_reset
+    attr_reader :nohands, :hide, :fastdig
 
     def initialize(client)
       super
@@ -16,6 +17,7 @@ module Golem
       @nohands = false
       @needs_reset = false
       @hide = false
+      @fastdig = false
 
       EM.add_periodic_timer(0.1) do
         if needs_reset
@@ -46,13 +48,9 @@ module Golem
       end
     end
 
-    def nohands?
-      @nohands
-    end
-
-    def hide?
-      @hide
-    end
+    alias :nohands? :nohands
+    alias :hide? :hide
+    alias :fastdig? :fastdig
 
     def handle(packet)
       if packet.kind == :update_time && @time
@@ -75,6 +73,13 @@ module Golem
           send_data packet.raw unless proxy_command(packet.message)
         elsif nohands?
           intercept_client_packet packet
+        elsif fastdig? && packet.kind == :block_dig && packet.status == 1
+          block = map[packet.x, packet.y, packet.z]
+          if digs = DIGS[block] && tool = TOOLS.keys.detect { |k| TOOLS[k].include? block }
+            send_client_packet :block_item_switch, 0, tool
+            digs.times { send_data packet.raw }
+            send_client_packet :block_dig, 3, packet.x, packet.y, packet.z, packet.direction
+          end
         else
           state.update packet
           send_data packet.raw
@@ -119,12 +124,18 @@ module Golem
       when /\/me/
         @nohands = false
         tell_client "back in control"
-      when /hide/
+      when /\/hide/
         tell_client "working in secret"
         @hide = true
-      when /nohide/
+      when /\/nohide/
         tell_client "working in public"
         @hide = false
+      when /\/(fastdig|fd)/
+        tell_client "fast digging enabled"
+        @fastdig = true
+      when /\/(nofastdig|nofd)/
+        tell_client "fast digging disabled"
+        @fastdig = false
       when /\/stop/
         clear_current_action
       else
