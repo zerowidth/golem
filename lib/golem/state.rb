@@ -34,8 +34,11 @@ module Golem
         position.stance = stance
         position.rotation, position.pitch, position.flying = rotation, pitch, flying
 
-      when :vehicle_spawn, :mob_spawn
-        entities[packet.id] = Entity.new(packet.id, [packet.x, packet.y, packet.z], nil)
+      when :vehicle_spawn
+        entities[packet.id] = Entity.new(packet.id, [packet.x, packet.y, packet.z], :vehicle, packet.type)
+
+      when :mob_spawn
+        entities[packet.id] = Entity.new(packet.id, [packet.x, packet.y, packet.z], :mob, packet.type)
 
       when :named_entity_spawn
         pos = [packet.x, packet.y, packet.z]
