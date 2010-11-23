@@ -195,6 +195,18 @@ module Golem
       when "players"
         client.list_players
 
+      when "nearest"
+        if block = args.shift
+          if code = CODES[block.to_sym]
+            puts "nearest #{block} to #{client.coords.inspect}:"
+            client.nearest(code).each { |p| puts "  #{p.inspect}" }
+          else
+            puts "block #{block} not recognized"
+          end
+        else
+          puts "nearest <block type>"
+        end
+
       else
         puts "unrecognized"
       end

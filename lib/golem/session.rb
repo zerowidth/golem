@@ -176,5 +176,13 @@ module Golem
       action Actions::ListPlayers
     end
 
+    def coords
+      state.coords
+    end
+
+    def nearest(code)
+      map.nearest(state.coords, code)
+    end
+
   end
 end

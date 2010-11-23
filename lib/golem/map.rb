@@ -121,6 +121,22 @@ module Golem
       end
     end
 
+    def find(code)
+      found = []
+      @chunks.each do |x, row|
+        row.each do |z, chunk|
+          found.concat chunk.find(code)
+        end
+      end
+      return found
+    end
+
+    # return the nearest n blocks of type code
+    def nearest(coords, code, n=5)
+      sorted = find(code).sort_by { |pos| (pos[0] - coords[0]).abs + (pos[1] - coords[1]).abs + (pos[2] - coords[2]).abs }
+      return sorted[0..n]
+    end
+
     def available(x, y, z, mode = :move, ignore = {})
       pos = [x, y, z]
       list = []

@@ -27,6 +27,18 @@ module Golem
       blocks.all? {|b| b}
     end
 
+    def find(code)
+      found = []
+      (0...size_z).each do |x|
+        (0...size_z).each do |z|
+          (0...size_y).each do |y|
+            found << [x + self.x, y + self.y, z + self.z] if self[x, y, z] == code
+          end
+        end
+      end
+      return found
+    end
+
     # for iterating over and sending updates
     def each_column
       (0...size_x).each do |x|
