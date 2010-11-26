@@ -72,6 +72,17 @@ module Golem
     client_packet :use_entity, 0x07 do
       int :player_id
       int :entity_id
+      bool :attacking_mob
+    end
+
+    server_packet :player_health, 0x08 do
+      byte :half_hearts
+    end
+
+    server_packet :respawn, 0x09 do
+    end
+
+    client_packet :respawn, 0x09 do
     end
 
     client_packet :flying_ack, 0x0a do
@@ -270,6 +281,11 @@ module Golem
       int :z
       byte :rotation
       byte :pitch
+    end
+
+    server_packet :entity_damage, 0x26 do
+      int :id
+      byte :damage
     end
 
     server_packet :attach_entity, 0x27 do
