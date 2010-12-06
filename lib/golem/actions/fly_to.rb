@@ -23,6 +23,10 @@ module Golem
         end
         current[2] = z
         move_to(*current)
+
+        # mitigate falling damage by warping to the correct y position
+        send_packet :player_position, x.to_f, y.to_f, y + STANCE, z.to_f, true
+        move_to x, y, z
       end
 
       def move(coords)
