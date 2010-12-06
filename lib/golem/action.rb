@@ -106,7 +106,7 @@ module Golem
     end
 
     def drop(code, count=1)
-      eid = state.entities.keys.max + 1
+      eid = (state.entities.keys.max || 1) + 1
       x, y, z = state.coords
       send_packet :pickup_spawn, eid, code, count, x * 32, y * 32, z * 32, 0, 0, 0
     end
