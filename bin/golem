@@ -5,20 +5,18 @@ $:.unshift(File.expand_path(File.dirname(__FILE__) + "/../lib"))
 require "golem"
 
 if ARGV.include?("-h") || ARGV.include?("--help")
-  abort "golem [host=localhost [port=25565]] | proxy [server=localhost [port=25565 [listen_port=8888]]]"
+  abort "golem [server=localhost [port=25565 [listen_port=8888]]] | bot [host=localhost [port=25565]]"
 end
 
-if ARGV.first == "proxy"
+if ARGV.first == "bot"
   ARGV.shift
+  host = ARGV.shift || "127.0.0.1"
+  port = (ARGV.shift || 25565).to_i
+  Golem::Bot.start(host, port)
+else
   server_host = ARGV.shift || "127.0.0.1"
   server_port = (ARGV.shift || server_host == "127.0.0.1" ? 8888 : 25565).to_i
   listen_port = (ARGV.shift || 25565).to_i
-
   Golem::Client.proxy("127.0.0.1", listen_port, server_host, server_port)
-else
-  host = ARGV.shift || "127.0.0.1"
-  port = (ARGV.shift || 25565).to_i
-
-  Golem::Bot.start(host, port)
 end
 
