@@ -353,6 +353,14 @@ module Golem
       field :payload, Field::EntityPayload
     end
 
+    server_packet :explosion, 0x3c do
+      double :x
+      double :y
+      double :z
+      float :radius # maybe?
+      field :explosion, Field::ExplosionBlocks
+    end
+
     client_packet :disconnect, 0xff do
       string :message
     end

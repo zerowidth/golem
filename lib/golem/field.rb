@@ -189,7 +189,7 @@ module Golem
         size, data = consume data, "n"
         *bytes, data = consume data, "C#{size}"
         payload = bytes.map {|b| b.chr }.join("")
-        [[size, payload], data]
+        [size, payload, data]
       end
     end
 
@@ -200,6 +200,18 @@ module Golem
         *types, data = consume data, "C#{array_size}"
         *metadata, data = consume data, "C#{array_size}"
         [coords, types, metadata, data]
+      end
+    end
+
+    class ExplosionBlocks < Base
+      def parse(data)
+        count, data = consume data, "N"
+        affected = []
+        count.times do
+          *coords, data = consume data, "ccc"
+          affected << coords
+        end
+        return [affected, data]
       end
     end
 

@@ -22,7 +22,7 @@ module Golem
       case packet.kind
 
       when :server_handshake
-        send_client_packet :login, 4, "golem", "Password"
+        send_client_packet :login, 6, "golem", "Password"
         9.times { send_client_packet :keepalive }
 
         # keepalive
