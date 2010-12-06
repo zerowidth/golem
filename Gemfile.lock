@@ -1,0 +1,21 @@
+GEM
+  specs:
+    chunky_png (0.10.5)
+    diff-lcs (1.1.2)
+    eventmachine (0.12.10)
+    rspec (2.1.0)
+      rspec-core (~> 2.1.0)
+      rspec-expectations (~> 2.1.0)
+      rspec-mocks (~> 2.1.0)
+    rspec-core (2.1.0)
+    rspec-expectations (2.1.0)
+      diff-lcs (~> 1.1.2)
+    rspec-mocks (2.1.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  chunky_png (~> 0.10.5)
+  eventmachine (~> 0.12.10)
+  rspec (~> 2.1.0)

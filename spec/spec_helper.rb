@@ -1,6 +1,7 @@
 require "rubygems"
-gem "chunky_png"
-require "chunky_png"
+require "bundler/setup"
+Bundler.require :development
+
 require "golem"
 
 RSpec.configure do |rspec|

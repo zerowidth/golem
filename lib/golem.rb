@@ -5,8 +5,9 @@ module Golem
   require "pathname"
   require "timeout"
 
-  require "eventmachine"
-  require "chunky_png"
+  require "rubygems"
+  require "bundler/setup"
+  Bundler.require :default
 
   Error = Class.new(StandardError)
   IncompletePacket = Class.new(Error)
