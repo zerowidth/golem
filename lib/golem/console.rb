@@ -207,6 +207,17 @@ module Golem
           puts "nearest <block type>"
         end
 
+      when "respawn"
+        client.respawn
+
+      when "warp"
+        if args.size == 3
+          x, y, z = args.map(&:to_i)
+          client.warp(x, y, z)
+        else
+          puts "warp x y z"
+        end
+
       else
         puts "unrecognized"
       end

@@ -184,5 +184,15 @@ module Golem
       map.nearest(state.coords, code)
     end
 
+    def respawn
+      send_client_packet :respawn
+    end
+
+    def warp(x, y, z)
+      action Actions::Simple, :move, x, y + 10, z
+      send_client_packet :player_position, x.to_f, y.to_f, y + STANCE, z.to_f, true
+      action Actions::Simple, :move, x, y, z
+    end
+
   end
 end
