@@ -9,6 +9,7 @@ module Golem
     def initialize(client)
       super
       @client = client
+      @debug_pattern = /./
     end
 
     def post_init
@@ -61,11 +62,11 @@ module Golem
         else
           client.send_data packet.raw
         end
-      elsif packet.kind == :player_health && packet.half_hearts < 20
-        log "health set to #{packet.half_hearts * 0.5} hearts, using golden apple"
-        send_client_packet :block_item_switch, 0, 322
-        send_client_packet :place, 322, -1, -1, -1, -1
-        client.send_data packet.raw
+      # elsif packet.kind == :player_health && packet.health < 20
+      #   log "health set to #{packet.health * 0.5} hearts, using golden apple"
+      #   send_client_packet :block_item_switch, 0, 322
+      #   send_client_packet :place, 322, -1, -1, -1, -1
+      #   client.send_data packet.raw
       else
         client.send_data packet.raw
       end
