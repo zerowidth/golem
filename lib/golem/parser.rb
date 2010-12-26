@@ -17,6 +17,7 @@ module Golem
       while @buffer != ""
         begin
           packet, @buffer = Packet.parse(@buffer, server_packets?)
+          yield packet if block_given?
           packets << packet
         rescue IncompletePacket
           break

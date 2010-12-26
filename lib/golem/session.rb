@@ -16,7 +16,7 @@ module Golem
 
     # receive data from the server
     def receive_data(data)
-      @server_parser.parse(data).each do |packet|
+      @server_parser.parse(data) do |packet|
         debug "server --> #{packet.inspect}"
         state.update packet
 

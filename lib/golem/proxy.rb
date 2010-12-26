@@ -72,7 +72,7 @@ module Golem
     end
 
     def from_client(data)
-      client_parser.parse(data).each do |packet|
+      client_parser.parse(data) do |packet|
         debug "client  --> #{packet.inspect}"
         if packet.kind == :chat
           send_data packet.raw unless proxy_command(packet.message)
