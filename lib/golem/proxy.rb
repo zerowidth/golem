@@ -81,7 +81,7 @@ module Golem
         elsif fastdig? && packet.kind == :block_dig && packet.status == 1
           block = map[packet.x, packet.y, packet.z]
           if digs = DIGS[block] && tool = TOOLS.keys.detect { |k| TOOLS[k].include? block }
-            send_client_packet :block_item_switch, 0, tool
+            # send_client_packet :block_item_switch, 0, tool
             digs.times { send_data packet.raw }
             send_client_packet :block_dig, 3, packet.x, packet.y, packet.z, packet.direction
           end

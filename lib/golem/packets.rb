@@ -1,6 +1,8 @@
 module Golem
   module Packets
 
+    PROTOCOL_VERSION = 8
+
     def self.client_packet(kind, code, &blk)
       p = Class.new(Packet)
       p.kind = kind
@@ -25,12 +27,14 @@ module Golem
       int :protocol_version
       string :username
       string :password
+      long :map_seed # always 0, not required
+      byte :dimension # always 0, not required
     end
 
     server_packet :accept_login, 0x01 do
       int :player_id
-      string :unused_1
-      string :unused_2
+      string :server_name # ?
+      string :motd # ?
       long :map_seed
       byte :dimension
     end
@@ -39,7 +43,7 @@ module Golem
       string :username
     end
 
-    server_packet :server_handshake, 0x02 do
+    server_packet :handshake, 0x02 do
       string :server_id
     end
 
@@ -55,12 +59,10 @@ module Golem
       long :time
     end
 
-    client_packet :player_inventory, 0x05 do
-      field :inventory, Field::PlayerInventory
-    end
-
-    server_packet :player_inventory, 0x05 do
-      field :inventory, Field::PlayerInventory
+    server_packet :entity_equipment, 0x05 do
+      int :entity_id
+      short :slot # 0 = held, 1-4 = armor slots
+      short :item_id # -1 for empty
     end
 
     server_packet :spawn_position, 0x06 do
@@ -72,11 +74,11 @@ module Golem
     client_packet :use_entity, 0x07 do
       int :player_id
       int :entity_id
-      bool :attacking_mob
+      bool :left_click # true when pointing at an entity, false when using a block
     end
 
     server_packet :player_health, 0x08 do
-      byte :half_hearts
+      short :health # 0 = dead, 20 = full
     end
 
     server_packet :respawn, 0x09 do
@@ -106,6 +108,12 @@ module Golem
       double :y
       double :stance
       double :z
+      bool :flying
+    end
+
+    server_packet :player_look, 0x0c do
+      float :rotation
+      float :pitch
       bool :flying
     end
 
@@ -145,37 +153,25 @@ module Golem
     end
 
     client_packet :place, 0x0f do
-      short :type
       int :x
       byte :y
       int :z
       byte :direction
+      field :items, Field::SlotItems
     end
 
-    server_packet :block_item_switch, 0x10 do
+    client_packet :holding_change, 0x10 do
+      short :slot_id # slot which player has selected, 0-8
+    end
+
+    server_packet :animation, 0x12 do
       int :entity_id
-      short :item_code
+      byte :animate # 0 = no animation, 1 = swing, 2 = death? 102 = ?
     end
 
-    client_packet :block_item_switch, 0x10 do
+    client_packet :animation, 0x12 do
       int :entity_id
-      short :item_code
-    end
-
-    server_packet :add_to_inventory, 0x11 do
-      short :type
-      byte :amount
-      short :life
-    end
-
-    client_packet :arm_animation, 0x12 do
-      int :entity_id
-      bool :forward # on to other clients
-    end
-
-    server_packet :arm_animation, 0x12 do
-      int :entity_id
-      bool :forward # on to other clients
+      byte :animate
     end
 
     server_packet :named_entity_spawn, 0x14 do
@@ -290,7 +286,7 @@ module Golem
 
     server_packet :attach_entity, 0x27 do
       int :entity_id
-      int :vehicle_id
+      int :vehicle_id # -1 for unattach
     end
 
     server_packet :pre_chunk, 0x32 do
@@ -339,26 +335,47 @@ module Golem
       byte :metadata
     end
 
-    server_packet :complex_entity, 0x3b do
-      int :x
-      short :y
-      int :z
-      field :payload, Field::EntityPayload
-    end
-
-    client_packet :complex_entity, 0x3b do
-      int :x
-      short :y
-      int :z
-      field :payload, Field::EntityPayload
-    end
-
     server_packet :explosion, 0x3c do
       double :x
       double :y
       double :z
       float :radius # maybe?
       field :explosion, Field::ExplosionBlocks
+    end
+
+    client_packet :close_window, 0x65 do
+      byte :window_id
+    end
+
+    client_packet :window_click, 0x66 do
+      byte :window_id
+      short :slot
+      byte :right_click
+      short :action_number
+      field :items, Field::SlotItems
+    end
+
+    server_packet :set_slot, 0x67 do
+      byte :window_id # 0 for inventory
+      short :slot
+      field :items, Field::SlotItems
+    end
+
+    server_packet :window_items, 0x68 do
+      byte :type # 0 for inventory
+      field :items, Field::WindowItems
+    end
+
+    server_packet :update_progress_bar, 0x69 do
+      byte :window_id
+      short :progress_bar # furnace: 0 is progress, 1 is fire
+      short :value
+    end
+
+    server_packet :transaction, 0x6A do
+      byte :window_id
+      short :action_number # must be in sequence
+      bool :accepted?
     end
 
     client_packet :disconnect, 0xff do

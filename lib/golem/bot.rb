@@ -21,8 +21,8 @@ module Golem
     def handle(packet)
       case packet.kind
 
-      when :server_handshake
-        send_client_packet :login, 6, "golem", "Password"
+      when :handshake
+        send_client_packet :login, Packets::PROTOCOL_VERSION, "golem", "Password"
         9.times { send_client_packet :keepalive }
 
         # keepalive

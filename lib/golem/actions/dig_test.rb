@@ -36,7 +36,7 @@ module Golem
         equip map.tool_for(x, y, z)
 
         send_packet :block_dig, 0, x, y, z, 4
-        send_packet :arm_animation, 0, true
+        # send_packet :arm_animation, 0, true
 
         count.times do
           send_packet :block_dig, 1, x, y, z, 4

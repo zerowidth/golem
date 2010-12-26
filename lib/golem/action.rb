@@ -60,7 +60,7 @@ module Golem
     end
 
     def equip(code)
-      send_packet :block_item_switch, 0, code
+      # send_packet :block_item_switch, 0, code
     end
 
     def dig(x, y, z)
@@ -86,7 +86,7 @@ module Golem
       end
 
       send_packet :block_dig, 0, x, y, z, face
-      send_packet :arm_animation, 0, true
+      # send_packet :arm_animation, 0, true
 
       # an extra 5 packets for good measure seems to make it work better
       count = (DIGS[map[x, y, z]] || 3000) + 5

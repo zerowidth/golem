@@ -123,6 +123,38 @@ module Golem
       end
     end
 
+    class SlotItems < Base
+      def parse(data)
+        item_id, data = consume data, "n"
+        if item_id == 0xFFFF
+          count, uses = 0, 0
+        else
+          count, uses, data = consume data, "CC"
+        end
+
+        [item_id, count, uses, data]
+      end
+    end
+
+    class WindowItems < Base
+      def parse(data)
+        count, data = consume data, "n"
+        slots = Array.new(count)
+        count.times do |n|
+          item_id, data = consume data, "n"
+          # 2's complement
+          # item_id = item_id & 0x4000 > 0 ? -((item_id ^ 0xFFFF) & 0x7FFF) - 1 : item_id
+          # puts "    slot #{n} item id #{item_id}"
+          unless item_id == 0xFFFF
+            item_count, uses, data = consume data, "Cn"
+            slots[n] = [item_id, item_count, uses]
+          end
+        end
+
+        [slots, data]
+      end
+    end
+
     class PlayerInventory < Base
       def parse(data)
         type, supposed_count, data = consume data, "Nn"
