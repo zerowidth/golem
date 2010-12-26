@@ -35,9 +35,11 @@ module Golem
       when 1 # TAG_Byte
         read "C"
       when 2 # TAG_Short
-        read "n"
+        value = read "n"
+        value & 0x4000 > 0 ? -((value ^ 0xFFFF) & 0x7FFF) - 1 : value
       when 3 # TAG_Int
-        read "N"
+        value = read "N"
+        value & 0x40000000 > 0 ? -((value ^ 0xFFFFFFFF) & 0x7FFFFFFF) - 1 : value
       when 4 # TAG_Long
         big, little = read "NN"
         (big << 32) + little
@@ -47,9 +49,7 @@ module Golem
         read "G"
       when 7 # TAG_Byte_Array
         size = read "N"
-        list = []
-        size.times { list << read("C") }
-        list
+        read "C#{size}"
       when 8 # TAG_String
         read_string
       when 9 # TAG_List
