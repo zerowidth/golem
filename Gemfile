@@ -1,3 +1,5 @@
+source :rubygems
+
 gem "eventmachine", "~> 0.12.10"
 gem "chunky_png", "~> 0.10.5"
 
