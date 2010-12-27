@@ -102,7 +102,7 @@ module Golem
       state.look_at(x, y, z)
       send_look
       equip code
-      send_packet :place, code, x, y - 1, z, 1
+      send_packet :place, x, y -1, z, 1, [code, 1, 0]
     end
 
     def drop(code, count=1)

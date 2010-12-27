@@ -316,8 +316,7 @@ module Golem
       def changes
         offset_x = x * 16
         offset_z = z * 16
-        coords = values[2]
-        types = values[3]
+        coords, types, metadata = *block_changes
         coords.map.with_index do |num, i|
           change_x = ((num & 0xF000) >> 12) + offset_x
           change_z = ((num & 0x0F00) >> 8) + offset_z
@@ -372,10 +371,16 @@ module Golem
       short :value
     end
 
-    server_packet :transaction, 0x6A do
+    server_packet :transaction, 0x6a do
       byte :window_id
       short :action_number # must be in sequence
-      bool :accepted?
+      bool :accepted
+    end
+
+    client_packet :transaction, 0x6a do
+      byte :window_id
+      short :action_number
+      bool :accepted
     end
 
     client_packet :disconnect, 0xff do

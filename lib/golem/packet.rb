@@ -128,7 +128,11 @@ module Golem
         f = field.new
         *values, data = f.parse(data)
         raw << f.raw
-        @values.concat values
+        if values.size == 1
+          @values.concat values
+        else
+          @values << values
+        end
       end
       data
     end

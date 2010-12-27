@@ -9,7 +9,6 @@ module Golem
     def initialize(client)
       super
       @client = client
-      @debug_pattern = /./
     end
 
     def post_init

@@ -10,12 +10,13 @@ module Golem
 
       # sets the value based on type and returns the remaining data
       def parse(data)
-        data
+        raise "don't know how to parse a #{self.class}"
       end
 
       # encode the value appropriately, returns a string
+      # (must override in subclasses)
       def encode
-        ""
+        raise "don't know how to encode a #{self.class} with values #{values.inspect}"
       end
 
       protected
@@ -133,6 +134,15 @@ module Golem
         end
 
         [item_id, count, uses, data]
+      end
+
+      def encode
+        slot, count, uses = *value
+        if slot && count && uses
+          return [slot, count, uses].pack("nCC")
+        else
+          return [-1].pack("n")
+        end
       end
     end
 
