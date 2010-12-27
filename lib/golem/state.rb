@@ -5,13 +5,15 @@ module Golem
 
   class State
 
-    attr_reader :map, :position, :entities, :players
+    attr_reader :map, :position, :entities, :players, :current_slot, :last_transaction
 
     def initialize
       @map = Map.new
       @position = Position.new
       @entities = {}
       @players = {}
+      @current_slot = 0
+      @last_transaction = 0
     end
 
     def update(packet)
@@ -47,7 +49,6 @@ module Golem
 
       when :pickup_spawn
         pos = [packet.x, packet.y, packet.z]
-        # puts "pickup: #{packet.id} #{pos} #{pos.map { |v| v / 32 }}"
         entities[packet.id] = Entity.new packet.id, pos, :pickup
 
       when :entity_move, :entity_move_look
@@ -83,7 +84,18 @@ module Golem
         packet.changes.each do |location, type|
           map[*location] = type
         end
+
+      when :holding_change # from client
+        @current_slot = packet.slot_id
+
+      when :transaction
+        @last_transaction = packet.action_number
+
       end
+    end
+
+    def next_transaction
+      @last_transaction += 1
     end
 
     def coords
