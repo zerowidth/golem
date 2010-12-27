@@ -81,37 +81,37 @@ module Golem
           client.say args.join(" ")
         end
 
-      when "dig"
-        if args.size == 3
-          x, y, z = args.map(&:to_i)
-          client.dig(x, y, z)
-        else
-          puts "dig <x> <y> <z>"
-        end
+      # when "dig"
+      #   if args.size == 3
+      #     x, y, z = args.map(&:to_i)
+      #     client.dig(x, y, z)
+      #   else
+      #     puts "dig <x> <y> <z>"
+      #   end
 
-      when "e", "equip"
-        if args.empty?
-          puts "equip <item code>"
-        else
-          client.equip(args.first.to_i)
-        end
+      # when "e", "equip"
+      #   if args.empty?
+      #     puts "equip <item code>"
+      #   else
+      #     client.equip(args.first.to_i)
+      #   end
 
-      when "x", "place"
-        if args.size == 4
-          x, y, z, code = args.map(&:to_i)
-          client.place x, y, z, code
-        else
-          puts "place <x> <y> <z> <code>"
-        end
+      # when "x", "place"
+      #   if args.size == 4
+      #     x, y, z, code = args.map(&:to_i)
+      #     client.place x, y, z, code
+      #   else
+      #     puts "place <x> <y> <z> <code>"
+      #   end
 
-      when "drop"
-        if args.size > 0
-          code, count = args.map(&:to_i)
-          count ||= 1
-          client.drop code, count
-        else
-          puts "drop <code> [count=1]"
-        end
+      # when "drop"
+      #   if args.size > 0
+      #     code, count = args.map(&:to_i)
+      #     count ||= 1
+      #     client.drop code, count
+      #   else
+      #     puts "drop <code> [count=1]"
+      #   end
 
       when "watch"
         if player = args.first
@@ -175,22 +175,22 @@ module Golem
           puts "survey <blueprint> [x y z]"
         end
 
-      when "build"
-        if blueprint = args.shift
-          if args.size == 3
-            x, y, z = args.map(&:to_i)
-            client.build(blueprint, [x, y, z])
-          elsif !args.empty?
-            puts "build <blueprint> [x y z]"
-          else
-            client.build(blueprint)
-          end
-        else
-          puts "build <blueprint> [x y z]"
-        end
+      # when "build"
+      #   if blueprint = args.shift
+      #     if args.size == 3
+      #       x, y, z = args.map(&:to_i)
+      #       client.build(blueprint, [x, y, z])
+      #     elsif !args.empty?
+      #       puts "build <blueprint> [x y z]"
+      #     else
+      #       client.build(blueprint)
+      #     end
+      #   else
+      #     puts "build <blueprint> [x y z]"
+      #   end
 
-      when "digtest"
-        client.action Actions::DigTest
+      # when "digtest"
+      #   client.action Actions::DigTest
 
       when "players"
         client.list_players

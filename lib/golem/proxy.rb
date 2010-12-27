@@ -55,17 +55,6 @@ module Golem
     def handle(packet)
       if packet.kind == :update_time && @time
         send_server_packet :update_time, @time
-      elsif packet.kind == :add_to_inventory && nohands? && current_action && !current_action.done?
-        if COMMON.include?(packet.type)
-          # ignore it, let the proxy swallow inventory adds while e.g. building
-        else
-          client.send_data packet.raw
-        end
-      # elsif packet.kind == :player_health && packet.health < 20
-      #   log "health set to #{packet.health * 0.5} hearts, using golden apple"
-      #   send_client_packet :block_item_switch, 0, 322
-      #   send_client_packet :place, 322, -1, -1, -1, -1
-      #   client.send_data packet.raw
       else
         client.send_data packet.raw
       end
