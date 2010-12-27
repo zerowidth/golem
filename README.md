@@ -30,6 +30,31 @@ It is a tool, not a weapon, so be nice.
 
 ## Features
 
+### BETA UPDATE
+
+Alas, the beta update has disabled a great deal of golem's functionality.
+The ability to drop any arbitrary block/item appears impossible, as does
+infinite health hacks. Auto-digging and building are not currently possible
+without heavy modification.
+
+In order to get building and digging to work again, golem will need to be able
+to manage inventory and slots (simulating the client's window clicks) and keep
+track of tools and their status.
+
+Additional behaviors for better automation would include:
+
+* set waypoints for lava (obsidian mines), chests for storage, forges,
+  and crafting tables
+* craft new tools and items
+* mine resources including ores and lava/obsidian
+* smelt cobble, ore, and sand
+* auto-combat with sword/arrows for self-defense
+* heal oneself, keeping food available always
+* lava/water avoidance and self-rescue (water bucket)
+* use expensive tools only when needed (diamond pick)
+* harvest and plant wheat
+* harvest and replant trees for wood
+
 ### Proxy
 
 Golem functions as a completely transparent pass-through proxy for the standard
@@ -42,7 +67,7 @@ A few of the client commands (type via say):
 * `/gps` or `/where` lists your current coordinates in the world. Handy for
   connecting tunnels and placing things accurately (F3 does this too)
 * `/[no]fastdig` allows fast digging, one click block breaking. Careful with
-  this as it spams "I am digging" packets.
+  this as it spams "I am digging" packets. (somewhat broken in beta)
 
 In addition, golem provides its own console for typing in more complex commands.
 
@@ -59,16 +84,15 @@ In addition, golem provides its own console for typing in more complex commands.
   blueprint, centered at the current location or the given x, y, z
 * `build <blueprint> [x y z]` builds the given blueprint at the current location
   or centered at x, y, z. This includes automatic digging, cleanup, and
-  placement.
+  placement. (does not work in beta)
 * `nearest <blocktype>` lists the nearest 5 blocks of the given type. Try
   `nearest diamond_ore`, and see `lib/golem/blocks.rb` for a list of the block
   types
 * various others, useful mainly for debugging
 
 As falling damage is calculated server-side, golem is mostly incapable of
-preventing harm due to downward motion. However, the proxy will automatically
-use a golden apple any time damage is sustained. Don't fall too far and all will
-be well.
+preventing harm due to downward motion. Don't fall too far and all will
+be well. Also, wear armor and know your destination altitude when flying.
 
 ### Standalone
 
