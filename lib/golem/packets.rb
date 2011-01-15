@@ -378,6 +378,13 @@ module Golem
       field :explosion, Field::ExplosionBlocks
     end
 
+    server_packet :open_window, 0x64 do
+      byte :window_id
+      byte :inventory_type
+      string :window_title
+      byte :number_of_slots
+    end
+
     client_packet :close_window, 0x65 do
       byte :window_id
     end
@@ -417,6 +424,16 @@ module Golem
       byte :window_id
       short :action_number
       bool :accepted
+    end
+
+    server_packet :update_sign, 0x82 do
+      int :x
+      short :y
+      int :z
+      string :text_1
+      string :text_2
+      string :text_3
+      string :text_4
     end
 
     client_packet :disconnect, 0xff do
