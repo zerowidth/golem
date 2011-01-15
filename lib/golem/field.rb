@@ -130,7 +130,7 @@ module Golem
         if item_id == 0xFFFF
           count, uses = 0, 0
         else
-          count, uses, data = consume data, "CC"
+          count, uses, data = consume data, "Cn"
         end
 
         [item_id, count, uses, data]
@@ -162,6 +162,47 @@ module Golem
         end
 
         [slots, data]
+      end
+    end
+
+    class MobData < Base
+      def parse(data)
+        metadata = []
+
+        loop do
+          code, data = consume data, "c"
+          break if code == 127
+
+          type = code & 0xE0 # what to read
+          other = code & 0x1F # ? additional data
+
+          case type
+          when 0 # byte
+            v, data = consume data, "c"
+            metadata << v
+          when 1 # short
+            v, data = consume data, "n"
+            metadata << v
+          when 2 # integer
+            v, data = consume data, "N"
+            metadata << v
+          when 3 # float
+            v, data = consume data, "g"
+            metadata << v
+          when 4 # string
+            size, data = consume data, "n"
+            *bytes, data = consume data, "C#{size}"
+            string = bytes.map { |b| b.chr }.join("")
+            metadata << string
+          when 5 # short, byte, short (position?)
+            short_a, byte, short_b, data = consume data, "ncn"
+            metadata = metadata.concat [short_a, byte, short_b]
+          else
+            raise "unknown mob data type #{type}"
+          end
+        end
+
+        [metadata, data]
       end
     end
 

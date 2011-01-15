@@ -9,6 +9,8 @@ module Golem
     def initialize(client)
       super
       @client = client
+      # @debug_pattern = /window|slot|transaction|holding|entity_equip/
+      # @debug_pattern = /mob_spawn|entity_metadata/
     end
 
     def post_init

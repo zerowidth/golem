@@ -22,6 +22,11 @@ module Golem
     18 => :leaves,
     19 => :sponge,
     20 => :glass,
+    21 => :lapis_ore,
+    22 => :lapis,
+    23 => :dispenser,
+    24 => :sandstone,
+    25 => :note,
     35 => :cloth,
     37 => :yellow_flower,
     38 => :red_rose,
@@ -77,7 +82,8 @@ module Golem
     88 => :slow_sand,
     89 => :lightstone,
     90 => :portal,
-    91 => :jack_o_lantern
+    91 => :jack_o_lantern,
+    92 => :cake
   }
 
   ITEMS = {
@@ -176,6 +182,10 @@ module Golem
    348 => :glowstone_dust,
    349 => :raw_fish,
    350 => :cooked_fish,
+   351 => :dye, # default ink_sac
+   352 => :bone,
+   353 => :sugar,
+   354 => :cake,
    2256 => :gold_record,
    2257 => :green_record
   }
@@ -240,7 +250,10 @@ module Golem
     :fence,
     :bloodstone,
     :slow_sand,
-    :lightstone
+    :lightstone,
+    :sandstone,
+    :note,
+    :dispenser
   ].map {|b| CODES[b] }
 
   WATER = [

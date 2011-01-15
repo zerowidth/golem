@@ -63,6 +63,7 @@ module Golem
       int :entity_id
       short :slot # 0 = held, 1-4 = armor slots
       short :item_id # -1 for empty
+      short :damage?
     end
 
     server_packet :spawn_position, 0x06 do
@@ -71,6 +72,11 @@ module Golem
       int :z
     end
 
+    server_packet :use_entity, 0x07 do
+      int :player_id
+      int :entity_id
+      bool :left_click # true when pointing at an entity, false when using a block
+    end
     client_packet :use_entity, 0x07 do
       int :player_id
       int :entity_id
@@ -174,6 +180,11 @@ module Golem
       byte :animate
     end
 
+    client_packet :entity_action, 0x13 do
+      int :entity_id
+      byte :action # 1 crouch, 2 uncrouch?
+    end
+
     server_packet :named_entity_spawn, 0x14 do
       int :id
       string :name
@@ -190,6 +201,7 @@ module Golem
       int :id
       short :item
       byte :count
+      short :damage?
       int :x
       int :y
       int :z
@@ -202,6 +214,7 @@ module Golem
       int :id
       short :item
       byte :count
+      short :damage?
       int :x
       int :y
       int :z
@@ -231,13 +244,23 @@ module Golem
       int :z
       byte :rotation
       byte :pitch
+      field :mob_data, Field::MobData
+    end
+
+    server_packet :painting, 0x19 do
+      int :id
+      string :title # name of the painting
+      int :x
+      int :y
+      int :z
+      int :type
     end
 
     server_packet :entity_velocity, 0x1c do
       int :id
-      short :x
-      short :y
-      short :z
+      short :v_x
+      short :v_y
+      short :v_z
     end
 
     server_packet :destroy_entity, 0x1d do
@@ -289,6 +312,11 @@ module Golem
       int :vehicle_id # -1 for unattach
     end
 
+    server_packet :entity_metadata, 0x28 do
+      int :entity_id
+      field :metadata, Field::MobData
+    end
+
     server_packet :pre_chunk, 0x32 do
       int :x # multiply by 16
       int :z # multiply by 16
@@ -332,6 +360,14 @@ module Golem
       int :z
       byte :type
       byte :metadata
+    end
+
+    server_packet :play_note, 0x36 do
+      int :x
+      short :y
+      int :z
+      byte :instrument
+      byte :pitch
     end
 
     server_packet :explosion, 0x3c do
