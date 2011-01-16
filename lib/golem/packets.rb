@@ -426,6 +426,16 @@ module Golem
       bool :accepted
     end
 
+    client_packet :update_sign, 0x82 do
+      int :x
+      short :y
+      int :z
+      string :text_1
+      string :text_2
+      string :text_3
+      string :text_4
+    end
+
     server_packet :update_sign, 0x82 do
       int :x
       short :y
