@@ -184,6 +184,11 @@ module Golem
       map.nearest(state.coords, code, 20)
     end
 
+    def column
+      x, y, z = state.coords
+      map.column([x, y-1, z])
+    end
+
     def respawn
       send_client_packet :respawn
     end

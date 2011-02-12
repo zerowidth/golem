@@ -223,6 +223,13 @@ module Golem
           puts "nearest <block type>"
         end
 
+      when "column"
+        column = client.column
+        column.each.with_index do |c, n|
+          block = BLOCKS[c]
+          puts "  %2d %s" % [client.column.size - n - 1, block]
+        end
+
       when "respawn"
         client.respawn
 

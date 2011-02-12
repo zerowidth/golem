@@ -137,6 +137,11 @@ module Golem
       return with_distance.sort_by { |pos, dist| dist }[0..n]
     end
 
+    def column(coords)
+      x, y, z = *coords
+      return (0..y).map { |yv| self[x, yv, z] }.reverse
+    end
+
     def available(x, y, z, mode = :move, ignore = {})
       pos = [x, y, z]
       list = []
