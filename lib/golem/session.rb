@@ -181,7 +181,7 @@ module Golem
     end
 
     def nearest(code)
-      map.nearest(state.coords, code)
+      map.nearest(state.coords, code, 20)
     end
 
     def respawn

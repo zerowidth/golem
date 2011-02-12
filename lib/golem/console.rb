@@ -198,8 +198,24 @@ module Golem
       when "nearest"
         if block = args.shift
           if code = CODES[block.to_sym]
+            x, y, z = client.coords
             puts "nearest #{block} to #{client.coords.inspect}:"
-            client.nearest(code).each { |p| puts "  #{p.inspect}" }
+            nearest = client.nearest(code)
+            if nearest.empty?
+              puts "no #{block} nearby"
+            else
+              nearest.each do |pos, dist|
+                d_x = pos[0] - x
+                d_y = pos[1] - y
+                d_z = pos[2] - z
+                # -x is north
+                # -z is east
+                north = d_x <= 0 ? "#{d_x.abs} north" : "#{d_x} south"
+                up = d_y < 0 ? "#{d_y.abs} down" : "#{d_y} up"
+                east = d_z <= 0 ? "#{d_z.abs} east" : "#{d_z} west"
+                puts "  #{pos.inspect} - #{dist} - #{north}, #{east}, #{up}"
+              end
+            end
           else
             puts "block #{block} not recognized"
           end

@@ -133,8 +133,8 @@ module Golem
 
     # return the nearest n blocks of type code
     def nearest(coords, code, n=5)
-      sorted = find(code).sort_by { |pos| (pos[0] - coords[0]).abs + (pos[1] - coords[1]).abs + (pos[2] - coords[2]).abs }
-      return sorted[0..n]
+      with_distance = find(code).map { |pos| [pos, (pos[0] - coords[0]).abs + (pos[1] - coords[1]).abs + (pos[2] - coords[2]).abs ] }
+      return with_distance.sort_by { |pos, dist| dist }[0..n]
     end
 
     def available(x, y, z, mode = :move, ignore = {})
