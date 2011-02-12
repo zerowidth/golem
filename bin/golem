@@ -15,7 +15,7 @@ if ARGV.first == "bot"
   Golem::Bot.start(host, port)
 else
   server_host = ARGV.shift || "127.0.0.1"
-  server_port = (ARGV.shift || server_host == "127.0.0.1" ? 8888 : 25565).to_i
+  server_port = (ARGV.shift || (server_host == "127.0.0.1" ? 8888 : 25565)).to_i
   listen_port = (ARGV.shift || 25565).to_i
   Golem::Client.proxy("127.0.0.1", listen_port, server_host, server_port)
 end
