@@ -65,7 +65,7 @@ module Golem
 
       when :destroy_entity
         deleted = entities.delete packet.id
-        if deleted.type == :player
+        if deleted && deleted.type == :player
           players.delete deleted.name
         end
 
