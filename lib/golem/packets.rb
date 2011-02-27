@@ -385,6 +385,10 @@ module Golem
       byte :number_of_slots
     end
 
+    server_packet :close_window, 0x65 do
+      byte :window_id
+    end
+
     client_packet :close_window, 0x65 do
       byte :window_id
     end
