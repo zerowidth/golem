@@ -1,7 +1,7 @@
 module Golem
   module Packets
 
-    PROTOCOL_VERSION = 8
+    PROTOCOL_VERSION = 9
 
     def self.client_packet(kind, code, &blk)
       p = Class.new(Packet)
@@ -170,6 +170,14 @@ module Golem
       short :slot_id # slot which player has selected, 0-8
     end
 
+    client_packet :unknown_use_bed, 0x11 do
+      int :entity_id
+      byte :flag
+      int :x
+      byte :y
+      int :z
+    end
+
     server_packet :animation, 0x12 do
       int :entity_id
       byte :animate # 0 = no animation, 1 = swing, 2 = death? 102 = ?
@@ -254,6 +262,15 @@ module Golem
       int :y
       int :z
       int :type
+    end
+
+    client_packet :unknown_onebee, 0x1b do
+      float :a
+      float :b
+      float :c
+      float :d
+      bool :u
+      bool :v
     end
 
     server_packet :entity_velocity, 0x1c do
