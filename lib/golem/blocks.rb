@@ -27,6 +27,7 @@ module Golem
     23 => :dispenser,
     24 => :sandstone,
     25 => :note,
+    26 => :bed,
     35 => :cloth,
     37 => :yellow_flower,
     38 => :red_rose,
@@ -83,7 +84,9 @@ module Golem
     89 => :lightstone,
     90 => :portal,
     91 => :jack_o_lantern,
-    92 => :cake
+    92 => :cake,
+    93 => :redstone_repeater_off,
+    94 => :redstone_repeater_on
   }
 
   ITEMS = {
@@ -186,6 +189,8 @@ module Golem
    352 => :bone,
    353 => :sugar,
    354 => :cake,
+   355 => :bed,
+   356 => :redstone_repeater,
    2256 => :gold_record,
    2257 => :green_record
   }
