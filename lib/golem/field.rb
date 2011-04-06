@@ -170,10 +170,10 @@ module Golem
         metadata = []
 
         loop do
-          code, data = consume data, "c"
+          code, data = consume data, "C"
           break if code == 127
 
-          type = code & 0xE0 # what to read
+          type = code >> 5 # what to read
           other = code & 0x1F # ? additional data
 
           case type
