@@ -1,7 +1,7 @@
 module Golem
   module Packets
 
-    PROTOCOL_VERSION = 9
+    PROTOCOL_VERSION = 10
 
     def self.client_packet(kind, code, &blk)
       p = Class.new(Packet)
@@ -393,6 +393,10 @@ module Golem
       double :z
       float :radius # maybe?
       field :explosion, Field::ExplosionBlocks
+    end
+
+    server_packet :invalid_bed, 0x46 do
+      byte :flag
     end
 
     server_packet :open_window, 0x64 do
