@@ -10,13 +10,13 @@ module Golem
 
       # sets the value based on type and returns the remaining data
       def parse(data)
-        raise "don't know how to parse a #{self.class}"
+        raise FieldParsingError, "don't know how to parse a #{self.class}"
       end
 
       # encode the value appropriately, returns a string
       # (must override in subclasses)
       def encode
-        raise "don't know how to encode a #{self.class} with values #{values.inspect}"
+        raise FieldParsingError, "don't know how to encode a #{self.class} with values #{values.inspect}"
       end
 
       protected
@@ -198,7 +198,7 @@ module Golem
             short_a, byte, short_b, data = consume data, "ncn"
             metadata = metadata.concat [short_a, byte, short_b]
           else
-            raise "unknown mob data type #{type}"
+            raise FieldParsingError, "unknown mob data type #{type}"
           end
         end
 

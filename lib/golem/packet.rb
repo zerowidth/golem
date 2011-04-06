@@ -122,11 +122,17 @@ module Golem
     end
 
     def parse(data)
+      remainder = data
       @values = []
       @raw = [self.class.code].pack("C")
       self.class.fields.each do |field|
         f = field.new
-        *values, data = f.parse(data)
+        begin
+        *values, remainder = f.parse(remainder)
+        rescue FieldParsingError
+          Packet.debug remainder
+          raise
+        end
         raw << f.raw
         if values.size == 1
           @values.concat values
@@ -134,7 +140,7 @@ module Golem
           @values << values
         end
       end
-      data
+      remainder
     end
 
     def encode

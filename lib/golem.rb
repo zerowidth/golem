@@ -11,6 +11,7 @@ module Golem
 
   Error = Class.new(StandardError)
   IncompletePacket = Class.new(Error)
+  FieldParsingError = Class.new(Error)
   Actions = Module.new
 
   STANCE = 1.62000000476837
