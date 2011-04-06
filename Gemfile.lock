@@ -1,6 +1,10 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    ZenTest (4.5.0)
+    autotest-fsevent (0.2.5)
+      sys-uname
+    autotest-growl (0.2.9)
     chunky_png (0.10.5)
     diff-lcs (1.1.2)
     eventmachine (0.12.10)
@@ -12,11 +16,15 @@ GEM
     rspec-expectations (2.1.0)
       diff-lcs (~> 1.1.2)
     rspec-mocks (2.1.0)
+    sys-uname (0.8.5)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  ZenTest
+  autotest-fsevent
+  autotest-growl
   chunky_png (~> 0.10.5)
   eventmachine (~> 0.12.10)
   rspec (~> 2.1.0)
