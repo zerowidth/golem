@@ -1,8 +1,8 @@
-# Golem: a Minecraft Alpha proxy and bot
+# Golem: a Minecraft Beta proxy and bot
 
 ## Synopsis
 
-Golem is a transparent proxy and bot for Minecraft Alpha Survival Multiplayer.
+Golem is a transparent proxy and bot for Minecraft Beta Survival Multiplayer.
 It is a tool, not a weapon, so be nice.
 
 ## Requirements
@@ -67,7 +67,7 @@ A few of the client commands (type via say):
 * `/gps` or `/where` lists your current coordinates in the world. Handy for
   connecting tunnels and placing things accurately (F3 does this too)
 * `/[no]fastdig` allows fast digging, one click block breaking. Careful with
-  this as it spams "I am digging" packets. (somewhat broken in beta)
+  this as it spams "I am digging" packets. (broken in beta)
 
 In addition, golem provides its own console for typing in more complex commands.
 
