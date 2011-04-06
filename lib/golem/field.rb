@@ -48,7 +48,7 @@ module Golem
     class Integer < Base
       def parse(data)
         value, data = consume data, "N"
-        value = value & 0x40000000 > 0 ? -((value ^ 0xFFFFFFFF) & 0x7FFFFFFF) - 1 : value
+        value = value & 0x80000000 > 0 ? -((value ^ 0xFFFFFFFF) & 0x7FFFFFFF) - 1 : value
         [value, data]
       end
 
@@ -73,7 +73,7 @@ module Golem
     class Short < Base
       def parse(data)
         value, data = consume data, "n"
-        value = value & 0x4000 > 0 ? -((value ^ 0xFFFF) & 0x7FFF) - 1 : value
+        value = value & 0x8000 > 0 ? -((value ^ 0xFFFF) & 0x7FFF) - 1 : value
         [value, data]
       end
 
@@ -153,7 +153,7 @@ module Golem
         count.times do |n|
           item_id, data = consume data, "n"
           # 2's complement
-          # item_id = item_id & 0x4000 > 0 ? -((item_id ^ 0xFFFF) & 0x7FFF) - 1 : item_id
+          # item_id = item_id & 0x8000 > 0 ? -((item_id ^ 0xFFFF) & 0x7FFF) - 1 : item_id
           # puts "    slot #{n} item id #{item_id}"
           unless item_id == 0xFFFF
             item_count, uses, data = consume data, "Cn"

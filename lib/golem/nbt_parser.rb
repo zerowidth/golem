@@ -36,10 +36,10 @@ module Golem
         read "C"
       when 2 # TAG_Short
         value = read "n"
-        value & 0x4000 > 0 ? -((value ^ 0xFFFF) & 0x7FFF) - 1 : value
+        value & 0x8000 > 0 ? -((value ^ 0xFFFF) & 0x7FFF) - 1 : value
       when 3 # TAG_Int
         value = read "N"
-        value & 0x40000000 > 0 ? -((value ^ 0xFFFFFFFF) & 0x7FFFFFFF) - 1 : value
+        value & 0x80000000 > 0 ? -((value ^ 0xFFFFFFFF) & 0x7FFFFFFF) - 1 : value
       when 4 # TAG_Long
         big, little = read "NN"
         (big << 32) + little
